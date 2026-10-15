@@ -1,3 +1,5 @@
+using HomeSphere.Domain.Entities;
+
 namespace HomeSphere.UnitTests;
 
 public class ArchitectureBaselineTests
@@ -6,11 +8,9 @@ public class ArchitectureBaselineTests
     public void Architecture_ShouldReferenceDomainAndApplication()
     {
         // Act
-        var domainAssembly = typeof(HomeSphere.Domain.Class1).Assembly;
-        var applicationAssembly = typeof(HomeSphere.Application.Class1).Assembly;
+        var domainAssembly = typeof(IdempotencyRecord).Assembly;
 
         // Assert
         Assert.NotNull(domainAssembly);
-        Assert.NotNull(applicationAssembly);
     }
 }

@@ -1,10 +1,22 @@
+using HomeSphere.Infrastructure;
+using HomeSphere.Infrastructure.Persistence;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services
 builder.Services.AddProblemDetails();
-builder.Services.AddHealthChecks();
+
+// Infrastructure (PostgreSQL & EF Core)
+builder.Services.AddInfrastructureServices(builder.Configuration);
+
+// Health Checks (Live and Database Ready)
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<HomeSphereDbContext>(
+        name: "PostgreSQL",
+        failureStatus: HealthStatus.Unhealthy,
+        tags: new[] { "ready", "db" });
 
 // CORS
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
@@ -46,6 +58,9 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "HomeSphere API v1");
     });
+
+    // Auto-apply pending migrations in development
+    await app.Services.ApplyMigrationsAsync();
 }
 
 app.UseCors("FrontendPolicy");
@@ -53,13 +68,26 @@ app.UseCors("FrontendPolicy");
 // Health check endpoints
 app.MapHealthChecks("/health");
 
-app.MapGet("/health/status", () => Results.Ok(new
+app.MapGet("/health/status", async (HealthCheckService healthCheckService) =>
 {
-    Status = "Healthy",
-    Service = "HomeSphere.WebApi",
-    Environment = app.Environment.EnvironmentName,
-    TimestampUtc = DateTime.UtcNow
-}))
+    var report = await healthCheckService.CheckHealthAsync();
+    var result = new
+    {
+        Status = report.Status.ToString(),
+        Service = "HomeSphere.WebApi",
+        Environment = app.Environment.EnvironmentName,
+        TimestampUtc = DateTime.UtcNow,
+        Checks = report.Entries.Select(e => new
+        {
+            Component = e.Key,
+            Status = e.Value.Status.ToString(),
+            Description = e.Value.Description,
+            DurationMs = e.Value.Duration.TotalMilliseconds
+        })
+    };
+
+    return report.Status == HealthStatus.Healthy ? Results.Ok(result) : Results.Json(result, statusCode: 503);
+})
 .WithName("GetHealthStatus")
 .WithOpenApi();
 
