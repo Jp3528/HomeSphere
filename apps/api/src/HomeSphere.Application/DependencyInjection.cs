@@ -1,5 +1,6 @@
 using HomeSphere.Application.Features.Addresses;
 using HomeSphere.Application.Features.Auth;
+using HomeSphere.Application.Features.Catalog;
 using HomeSphere.Application.Features.Users;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,6 +13,9 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<IAddressService, AddressService>();
+        services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<IBrandService, BrandService>();
+        services.AddScoped<IProductService, ProductService>();
         return services;
     }
 }

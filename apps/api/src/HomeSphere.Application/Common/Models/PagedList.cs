@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace HomeSphere.Application.Common.Models;
 
 public class PagedList<T>
@@ -21,7 +23,22 @@ public class PagedList<T>
     public static PagedList<T> Create(IEnumerable<T> source, int pageNumber, int pageSize)
     {
         var count = source.Count();
-        var items = source.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
-        return new PagedList<T>(items, count, pageNumber, pageSize);
+        var page = pageNumber > 0 ? pageNumber : 1;
+        var size = pageSize > 0 ? pageSize : 10;
+        var items = source.Skip((page - 1) * size).Take(size).ToList();
+        return new PagedList<T>(items, count, page, size);
+    }
+
+    public static async Task<PagedList<T>> CreateAsync(
+        IQueryable<T> source,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var count = await source.CountAsync(cancellationToken);
+        var page = pageNumber > 0 ? pageNumber : 1;
+        var size = pageSize > 0 ? pageSize : 10;
+        var items = await source.Skip((page - 1) * size).Take(size).ToListAsync(cancellationToken);
+        return new PagedList<T>(items, count, page, size);
     }
 }
