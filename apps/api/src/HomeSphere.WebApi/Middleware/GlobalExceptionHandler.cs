@@ -27,6 +27,7 @@ public class GlobalExceptionHandler : IExceptionHandler
             NotFoundException notFound => (StatusCodes.Status404NotFound, "Not Found", notFound.Message),
             ConflictException conflict => (StatusCodes.Status409Conflict, "Conflict", conflict.Message),
             BusinessRuleValidationException validation => (StatusCodes.Status400BadRequest, "Business Rule Violation", validation.Message),
+            ForbiddenAccessException forbidden => (StatusCodes.Status403Forbidden, "Forbidden", forbidden.Message),
             UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized", "Access denied."),
             _ => (StatusCodes.Status500InternalServerError, "Internal Server Error", "An unexpected error occurred. Please contact support.")
         };

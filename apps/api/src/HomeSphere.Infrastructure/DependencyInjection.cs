@@ -1,6 +1,7 @@
 using HomeSphere.Application.Common.Interfaces;
 using HomeSphere.Infrastructure.Persistence;
 using HomeSphere.Infrastructure.Security;
+using HomeSphere.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,7 +30,9 @@ public static class DependencyInjection
             });
         });
 
+        services.AddHttpContextAccessor();
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<HomeSphereDbContext>());
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
