@@ -1,14 +1,20 @@
+"use client";
+
 import Link from "next/link";
-import { ShoppingBag, Sparkles, User, Search } from "lucide-react";
+import { useAuthStore } from "@/stores/auth-store";
+import { ShoppingBag, Sparkles, Search, Shield, LogIn } from "lucide-react";
 
 export function Navbar() {
+  const { user, isAuthenticated, hasRole } = useAuthStore();
+  const isAdmin = hasRole("ADMIN");
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-stone-200 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand Logo */}
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-700 text-white font-bold text-lg shadow-sm transition-transform group-hover:scale-105">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-800 text-white font-bold text-lg shadow-sm transition-transform group-hover:scale-105">
               H
             </div>
             <div className="flex flex-col">
@@ -36,12 +42,16 @@ export function Navbar() {
               <Sparkles className="h-4 w-4" />
               Ambientes Interactivos
             </Link>
-            <Link
-              href="/categories"
-              className="transition-colors hover:text-amber-800"
-            >
-              Categorías
-            </Link>
+
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="flex items-center gap-1 rounded-full bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700 hover:bg-purple-100 transition-colors"
+              >
+                <Shield className="h-3 w-3" />
+                Panel Admin
+              </Link>
+            )}
           </nav>
         </div>
 
@@ -57,24 +67,45 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Actions (Cart & Account) */}
-        <div className="flex items-center gap-4">
-          <Link
-            href="/account"
-            className="flex items-center gap-2 rounded-full p-2 text-stone-700 hover:bg-stone-100 hover:text-stone-900 transition-colors"
-            title="Mi Cuenta"
-          >
-            <User className="h-5 w-5" />
-            <span className="hidden sm:inline text-sm font-medium">Cuenta</span>
-          </Link>
+        {/* Actions (Auth, Cart) */}
+        <div className="flex items-center gap-3">
+          {isAuthenticated && user ? (
+            <Link
+              href="/account"
+              className="flex items-center gap-2 rounded-full border border-stone-200 bg-stone-50 py-1.5 px-3 text-stone-800 hover:bg-stone-100 transition-colors"
+            >
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-800 text-white text-xs font-bold">
+                {user.firstName[0]}
+              </div>
+              <span className="text-xs font-semibold hidden sm:inline">
+                {user.firstName}
+              </span>
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/login"
+                className="flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-100 transition-colors"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                Ingresar
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-xl bg-amber-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-900 transition-colors hidden sm:inline-block shadow-sm"
+              >
+                Registrarse
+              </Link>
+            </div>
+          )}
 
           <Link
             href="/cart"
-            className="relative flex items-center gap-2 rounded-full bg-stone-900 px-4 py-2 text-white hover:bg-stone-800 transition-colors shadow-sm"
+            className="relative flex items-center gap-2 rounded-full bg-stone-900 px-3.5 py-1.5 text-white hover:bg-stone-800 transition-colors shadow-sm"
           >
             <ShoppingBag className="h-4 w-4" />
-            <span className="text-sm font-medium">Carrito</span>
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-600 text-[11px] font-bold text-white">
+            <span className="text-xs font-medium hidden sm:inline">Carrito</span>
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-600 text-[10px] font-bold text-white">
               0
             </span>
           </Link>

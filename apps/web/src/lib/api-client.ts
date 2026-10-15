@@ -25,6 +25,14 @@ export class ApiClientError extends Error {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5100';
 
+let currentAuthToken: string | null = null;
+
+export const setAuthToken = (token: string | null) => {
+  currentAuthToken = token;
+};
+
+export const getAuthToken = () => currentAuthToken;
+
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
 }
@@ -51,6 +59,10 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
+
+  if (currentAuthToken) {
+    defaultHeaders['Authorization'] = `Bearer ${currentAuthToken}`;
+  }
 
   const response = await fetch(url, {
     ...restOptions,
