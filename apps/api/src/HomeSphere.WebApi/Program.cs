@@ -1,12 +1,14 @@
 using HomeSphere.Infrastructure;
 using HomeSphere.Infrastructure.Persistence;
+using HomeSphere.WebApi.Middleware;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services
+// Standard ProblemDetails and Exception Handling
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // Infrastructure (PostgreSQL & EF Core)
 builder.Services.AddInfrastructureServices(builder.Configuration);
@@ -47,6 +49,8 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+// Correlation ID & Exception Handler Pipeline
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
