@@ -1,4 +1,6 @@
+using HomeSphere.Application.Common.Interfaces;
 using HomeSphere.Infrastructure.Persistence;
+using HomeSphere.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +29,10 @@ public static class DependencyInjection
             });
         });
 
+        services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<HomeSphereDbContext>());
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+
         return services;
     }
 
@@ -35,16 +41,22 @@ public static class DependencyInjection
         using var scope = serviceProvider.CreateScope();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<HomeSphereDbContext>>();
         var context = scope.ServiceProvider.GetRequiredService<HomeSphereDbContext>();
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
         try
         {
             logger.LogInformation("Applying pending PostgreSQL migrations...");
             await context.Database.MigrateAsync();
             logger.LogInformation("PostgreSQL migrations applied successfully.");
+
+            logger.LogInformation("Executing database seeding...");
+            await DatabaseSeeder.SeedAsync(context, passwordHasher, configuration, logger);
+            logger.LogInformation("Database seeding completed.");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An error occurred while applying database migrations.");
+            logger.LogError(ex, "An error occurred while applying database migrations or seeding.");
             throw;
         }
     }

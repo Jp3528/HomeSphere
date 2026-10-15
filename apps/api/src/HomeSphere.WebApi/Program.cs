@@ -1,17 +1,46 @@
+using System.Text;
+using HomeSphere.Application;
 using HomeSphere.Infrastructure;
 using HomeSphere.Infrastructure.Persistence;
 using HomeSphere.WebApi.Middleware;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Standard ProblemDetails and Exception Handling
+// Controllers & Global ProblemDetails
+builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-// Infrastructure (PostgreSQL & EF Core)
+// Application & Infrastructure Layers
+builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
+
+// JWT Authentication
+var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "development_super_secret_jwt_key_at_least_32_chars_long!";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "HomeSphereApi";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "HomeSphereWeb";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 // Health Checks (Live and Database Ready)
 builder.Services.AddHealthChecks()
@@ -35,7 +64,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// OpenAPI / Swagger
+// OpenAPI / Swagger with JWT Security Definition
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -44,6 +73,30 @@ builder.Services.AddSwaggerGen(options =>
         Title = "HomeSphere API",
         Version = "v1",
         Description = "E-commerce avanzado para hogar + experiencia de ambientes interactivos"
+    });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Format: 'Bearer {token}'",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
     });
 });
 
@@ -63,11 +116,14 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "HomeSphere API v1");
     });
 
-    // Auto-apply pending migrations in development
+    // Auto-apply pending migrations and execute seed in development
     await app.Services.ApplyMigrationsAsync();
 }
 
 app.UseCors("FrontendPolicy");
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Health check endpoints
 app.MapHealthChecks("/health");
@@ -94,6 +150,8 @@ app.MapGet("/health/status", async (HealthCheckService healthCheckService) =>
 })
 .WithName("GetHealthStatus")
 .WithOpenApi();
+
+app.MapControllers();
 
 app.MapGet("/", () => Results.Redirect("/swagger"));
 

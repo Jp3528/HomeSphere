@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\HomeSphere.Application\HomeSphere.Application.csproj" />
     <ProjectReference Include="..\..\src\HomeSphere.Domain\HomeSphere.Domain.csproj" />
+    <ProjectReference Include="..\..\src\HomeSphere.Infrastructure\HomeSphere.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
