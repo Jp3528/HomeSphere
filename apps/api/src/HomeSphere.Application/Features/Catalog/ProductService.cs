@@ -19,6 +19,7 @@ public interface IProductService
     Task<ProductVariantDto> AddVariantAsync(Guid productId, CreateProductVariantRequest request, CancellationToken cancellationToken = default);
     Task<ProductVariantDto> UpdateVariantAsync(Guid productId, Guid variantId, UpdateProductVariantRequest request, CancellationToken cancellationToken = default);
     Task DeleteVariantAsync(Guid productId, Guid variantId, CancellationToken cancellationToken = default);
+    Task<ProductFiltersDto> GetCatalogFiltersAsync(CancellationToken cancellationToken = default);
     Task<ProductImageDto> AddImageAsync(Guid productId, CreateProductImageRequest request, CancellationToken cancellationToken = default);
     Task DeleteImageAsync(Guid productId, Guid imageId, CancellationToken cancellationToken = default);
     Task SetPrimaryImageAsync(Guid productId, Guid imageId, CancellationToken cancellationToken = default);
@@ -31,6 +32,46 @@ public class ProductService : IProductService
     public ProductService(IApplicationDbContext context)
     {
         _context = context;
+    }
+
+    public async Task<ProductFiltersDto> GetCatalogFiltersAsync(CancellationToken cancellationToken = default)
+    {
+        var activeProducts = _context.Products
+            .AsNoTracking()
+            .Where(p => p.Status == ProductStatus.Active);
+
+        var minPrice = await activeProducts.AnyAsync(cancellationToken)
+            ? await activeProducts.MinAsync(p => p.BasePrice, cancellationToken)
+            : 0m;
+
+        var maxPrice = await activeProducts.AnyAsync(cancellationToken)
+            ? await activeProducts.MaxAsync(p => p.BasePrice, cancellationToken)
+            : 0m;
+
+        var categories = await _context.Categories
+            .AsNoTracking()
+            .Where(c => c.IsActive)
+            .OrderBy(c => c.DisplayOrder)
+            .ThenBy(c => c.Name)
+            .Select(c => new CategoryFilterItemDto(
+                c.Slug,
+                c.Name,
+                c.Products.Count(p => p.Status == ProductStatus.Active)
+            ))
+            .ToListAsync(cancellationToken);
+
+        var brands = await _context.Brands
+            .AsNoTracking()
+            .Where(b => b.IsActive)
+            .OrderBy(b => b.Name)
+            .Select(b => new BrandFilterItemDto(
+                b.Slug,
+                b.Name,
+                b.Products.Count(p => p.Status == ProductStatus.Active)
+            ))
+            .ToListAsync(cancellationToken);
+
+        return new ProductFiltersDto(minPrice, maxPrice, categories, brands);
     }
 
     public async Task<PagedList<ProductListDto>> GetProductsAsync(ProductQueryParams queryParams, CancellationToken cancellationToken = default)

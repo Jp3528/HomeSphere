@@ -88,6 +88,16 @@ public record ProductDetailDto(
     DateTime? UpdatedAtUtc
 );
 
+public record CategoryFilterItemDto(string Slug, string Name, int Count);
+public record BrandFilterItemDto(string Slug, string Name, int Count);
+
+public record ProductFiltersDto(
+    decimal MinPrice,
+    decimal MaxPrice,
+    IReadOnlyList<CategoryFilterItemDto> Categories,
+    IReadOnlyList<BrandFilterItemDto> Brands
+);
+
 public record ProductQueryParams(
     string? Search = null,
     string? CategorySlug = null,

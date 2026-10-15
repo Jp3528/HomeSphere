@@ -28,6 +28,14 @@ public class ProductsController : ControllerBase
         return Ok(products);
     }
 
+    [HttpGet("filters")]
+    [ProducesResponseType(typeof(ProductFiltersDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetFilters(CancellationToken cancellationToken)
+    {
+        var filters = await _productService.GetCatalogFiltersAsync(cancellationToken);
+        return Ok(filters);
+    }
+
     [HttpGet("{slug}")]
     [ProducesResponseType(typeof(ProductDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
