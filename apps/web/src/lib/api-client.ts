@@ -26,12 +26,26 @@ export class ApiClientError extends Error {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5100';
 
 let currentAuthToken: string | null = null;
+let currentCartToken: string | null = typeof window !== 'undefined' ? localStorage.getItem('homesphere_cart_token') : null;
 
 export const setAuthToken = (token: string | null) => {
   currentAuthToken = token;
 };
 
 export const getAuthToken = () => currentAuthToken;
+
+export const setCartToken = (token: string | null) => {
+  currentCartToken = token;
+  if (typeof window !== 'undefined') {
+    if (token) {
+      localStorage.setItem('homesphere_cart_token', token);
+    } else {
+      localStorage.removeItem('homesphere_cart_token');
+    }
+  }
+};
+
+export const getCartToken = () => currentCartToken;
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
@@ -64,6 +78,10 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     defaultHeaders['Authorization'] = `Bearer ${currentAuthToken}`;
   }
 
+  if (currentCartToken) {
+    defaultHeaders['X-Cart-Token'] = currentCartToken;
+  }
+
   const response = await fetch(url, {
     ...restOptions,
     headers: {
@@ -72,6 +90,11 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     },
     credentials: 'include',
   });
+
+  const returnedCartToken = response.headers.get('X-Cart-Token');
+  if (returnedCartToken && returnedCartToken !== currentCartToken) {
+    setCartToken(returnedCartToken);
+  }
 
   if (!response.ok) {
     let problemDetails: ProblemDetails | undefined;

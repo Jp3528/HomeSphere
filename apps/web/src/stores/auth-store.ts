@@ -66,6 +66,13 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
+          // Merge guest cart with user cart deterministically
+          try {
+            const { useCartStore } = await import('./cart-store');
+            await useCartStore.getState().mergeWithUser();
+          } catch {
+            // Non-blocking
+          }
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : 'Error al iniciar sesión';
           set({ error: message, isLoading: false });
@@ -91,6 +98,13 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
+          // Merge guest cart with new user cart
+          try {
+            const { useCartStore } = await import('./cart-store');
+            await useCartStore.getState().mergeWithUser();
+          } catch {
+            // Non-blocking
+          }
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : 'Error al registrarse';
           set({ error: message, isLoading: false });

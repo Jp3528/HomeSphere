@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { useAuthStore } from "@/stores/auth-store";
+import { useCartStore } from "@/stores/cart-store";
 import { ShoppingBag, Sparkles, Search, Shield, LogIn } from "lucide-react";
 
 export function Navbar() {
   const { user, isAuthenticated, hasRole } = useAuthStore();
+  const { cart, openDrawer } = useCartStore();
   const isAdmin = hasRole("ADMIN");
+  const totalItems = cart?.totalItems ?? 0;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-stone-200 bg-white/90 backdrop-blur-md">
@@ -99,16 +102,20 @@ export function Navbar() {
             </div>
           )}
 
-          <Link
-            href="/cart"
-            className="relative flex items-center gap-2 rounded-full bg-stone-900 px-3.5 py-1.5 text-white hover:bg-stone-800 transition-colors shadow-sm"
+          <button
+            type="button"
+            onClick={openDrawer}
+            className="relative flex items-center gap-2 rounded-full bg-stone-900 px-3.5 py-1.5 text-white hover:bg-stone-800 transition-colors shadow-sm cursor-pointer"
+            aria-label={`Ver carrito de compras con ${totalItems} artículos`}
           >
             <ShoppingBag className="h-4 w-4" />
             <span className="text-xs font-medium hidden sm:inline">Carrito</span>
-            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-600 text-[10px] font-bold text-white">
-              0
-            </span>
-          </Link>
+            {totalItems > 0 && (
+              <span className="flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-amber-600 text-[10px] font-bold text-white">
+                {totalItems}
+              </span>
+            )}
+          </button>
         </div>
       </div>
     </header>

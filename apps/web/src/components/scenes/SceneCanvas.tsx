@@ -4,7 +4,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { SceneHotspot } from "@/types/scenes";
-import { ArrowUpRight, X } from "lucide-react";
+import { useCartStore } from "@/stores/cart-store";
+import { ArrowUpRight, X, ShoppingBag } from "lucide-react";
 
 interface SceneCanvasProps {
   imageUrl: string;
@@ -23,6 +24,7 @@ export function SceneCanvas({
 }: SceneCanvasProps) {
   const [internalActiveId, setInternalActiveId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { addItem } = useCartStore();
 
   const activeId = controlledActiveId !== undefined ? controlledActiveId : internalActiveId;
 
@@ -171,14 +173,32 @@ export function SceneCanvas({
                   </div>
                 </div>
 
-                {/* CTA Link to PDP */}
-                <Link
-                  href={`/products/${hotspot.productSlug}`}
-                  className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-zinc-900 py-2 text-xs font-semibold text-white transition-colors hover:bg-amber-600 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-amber-400"
-                >
-                  <span>Ver Pieza en Detalle</span>
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </Link>
+                {/* CTA Buttons */}
+                <div className="mt-3 flex gap-2">
+                  <Link
+                    href={`/products/${hotspot.productSlug}`}
+                    className="flex-1 flex items-center justify-center gap-1 rounded-xl border border-zinc-200 py-2 text-[11px] font-semibold text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  >
+                    <span>Detalles</span>
+                    <ArrowUpRight className="h-3 w-3" />
+                  </Link>
+                  {hotspot.productVariantId && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await addItem(hotspot.productVariantId!, 1);
+                        } catch {
+                          // Handled by store
+                        }
+                      }}
+                      className="flex-1 flex items-center justify-center gap-1 rounded-xl bg-amber-700 py-2 text-[11px] font-semibold text-white transition-colors hover:bg-amber-600 shadow-sm"
+                    >
+                      <ShoppingBag className="h-3 w-3" />
+                      <span>Comprar</span>
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>

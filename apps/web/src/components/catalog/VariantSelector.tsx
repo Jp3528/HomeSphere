@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ProductVariant } from "@/types/catalog";
+import { useCartStore } from "@/stores/cart-store";
 import { ShoppingBag, Check, ShieldCheck, Truck, RefreshCw } from "lucide-react";
 
 interface VariantSelectorProps {
@@ -13,6 +14,7 @@ interface VariantSelectorProps {
 export function VariantSelector({ variants, basePrice }: VariantSelectorProps) {
   const activeVariants = variants.filter((v) => v.isActive);
   const initialVariant = activeVariants[0] || variants[0];
+  const { addItem, isLoading: isCartLoading } = useCartStore();
 
   const [selectedVariantId, setSelectedVariantId] = useState<string>(
     initialVariant ? initialVariant.id : ""
@@ -43,13 +45,18 @@ export function VariantSelector({ variants, basePrice }: VariantSelectorProps) {
     }
   }
 
-  const handleAddToCart = () => {
-    if (isOutOfStock) return;
+  const handleAddToCart = async () => {
+    if (isOutOfStock || !selectedVariant) return;
 
-    setAddedFeedback(true);
-    setTimeout(() => {
-      setAddedFeedback(false);
-    }, 2500);
+    try {
+      await addItem(selectedVariant.id, quantity);
+      setAddedFeedback(true);
+      setTimeout(() => {
+        setAddedFeedback(false);
+      }, 2500);
+    } catch {
+      // Error is tracked in cartStore
+    }
   };
 
   return (
@@ -187,7 +194,7 @@ export function VariantSelector({ variants, basePrice }: VariantSelectorProps) {
         <button
           type="button"
           onClick={handleAddToCart}
-          disabled={isOutOfStock}
+          disabled={isOutOfStock || isCartLoading}
           className={`flex h-12 flex-1 items-center justify-center gap-2 rounded-xl text-sm font-bold shadow-md transition-all ${
             addedFeedback
               ? "bg-emerald-600 text-white"
@@ -200,6 +207,11 @@ export function VariantSelector({ variants, basePrice }: VariantSelectorProps) {
             <>
               <Check className="h-5 w-5" />
               ¡Añadido a la bolsa!
+            </>
+          ) : isCartLoading ? (
+            <>
+              <RefreshCw className="h-5 w-5 animate-spin" />
+              Añadiendo...
             </>
           ) : (
             <>
