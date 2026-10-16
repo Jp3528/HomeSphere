@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function Footer() {
   return (
     <footer className="mt-auto border-t border-stone-200 bg-stone-50 py-12 text-stone-600">
@@ -15,9 +17,9 @@ export function Footer() {
               Explorar
             </h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="/catalog" className="hover:text-amber-800 transition-colors">Catálogo de Productos</a></li>
-              <li><a href="/scenes" className="hover:text-amber-800 transition-colors">Ambientes Interactivos</a></li>
-              <li><a href="/categories" className="hover:text-amber-800 transition-colors">Salas y Dormitorios</a></li>
+              <li><Link href="/products" className="hover:text-amber-800 transition-colors">Catálogo de Productos</Link></li>
+              <li><Link href="/scenes" className="hover:text-amber-800 transition-colors">Ambientes Interactivos</Link></li>
+              <li><Link href="/products" className="hover:text-amber-800 transition-colors">Salas y Dormitorios</Link></li>
             </ul>
           </div>
 
