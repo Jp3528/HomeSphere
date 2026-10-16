@@ -454,5 +454,141 @@ public static class DatabaseSeeder
             await context.SaveChangesAsync();
             logger.LogInformation("Seeded {CouponCount} initial promotional coupons.", coupons.Count);
         }
+
+        // 7. Seed Sample Business Orders & Initial Audit Log
+        if (!await context.Orders.AnyAsync())
+        {
+            var customerUser = await context.Users.FirstOrDefaultAsync(u => u.Email == "customer@homesphere.com");
+            var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Email == "admin@homesphere.com");
+            var variants = await context.ProductVariants.Include(v => v.Product).Take(4).ToListAsync();
+
+            if (customerUser != null && variants.Count >= 2)
+            {
+                var v1 = variants[0];
+                var v2 = variants[1];
+                var now = DateTime.UtcNow;
+
+                var sampleAddressJson = "{\"RecipientName\":\"Demo Customer\",\"AddressLine1\":\"Av. Javier Prado 1234\",\"City\":\"Lima\",\"StateOrProvince\":\"Lima\",\"PostalCode\":\"15046\",\"Country\":\"PE\",\"Phone\":\"+51987654321\"}";
+
+                var order1 = new Order
+                {
+                    OrderNumber = "HS-202610-1001",
+                    PublicId = $"ord_{Guid.NewGuid():N}"[..20],
+                    UserId = customerUser.Id,
+                    GuestEmail = null,
+                    Status = OrderStatus.Delivered,
+                    Subtotal = v1.Price * 2,
+                    DiscountTotal = 50m,
+                    ShippingCost = 0m,
+                    Total = (v1.Price * 2) - 50m,
+                    CouponCode = "HOGAR50",
+                    ShippingMethod = "standard",
+                    ShippingAddressSnapshotJson = sampleAddressJson,
+                    CreatedAtUtc = now.AddDays(-15),
+                    DeliveredAtUtc = now.AddDays(-10),
+                    PaidAtUtc = now.AddDays(-15),
+                    Items = new List<OrderItem>
+                    {
+                        new()
+                        {
+                            ProductVariantId = v1.Id,
+                            ProductNameSnapshot = v1.Product.Name,
+                            SkuSnapshot = v1.Sku,
+                            UnitPrice = v1.Price,
+                            Quantity = 2,
+                            TotalPrice = v1.Price * 2,
+                            CreatedAtUtc = now.AddDays(-15)
+                        }
+                    }
+                };
+
+                var order2 = new Order
+                {
+                    OrderNumber = "HS-202610-1002",
+                    PublicId = $"ord_{Guid.NewGuid():N}"[..20],
+                    UserId = customerUser.Id,
+                    Status = OrderStatus.Paid,
+                    Subtotal = v2.Price,
+                    DiscountTotal = 0m,
+                    ShippingCost = 15m,
+                    Total = v2.Price + 15m,
+                    ShippingMethod = "standard",
+                    ShippingAddressSnapshotJson = sampleAddressJson,
+                    CreatedAtUtc = now.AddDays(-5),
+                    PaidAtUtc = now.AddDays(-5),
+                    Items = new List<OrderItem>
+                    {
+                        new()
+                        {
+                            ProductVariantId = v2.Id,
+                            ProductNameSnapshot = v2.Product.Name,
+                            SkuSnapshot = v2.Sku,
+                            UnitPrice = v2.Price,
+                            Quantity = 1,
+                            TotalPrice = v2.Price,
+                            CreatedAtUtc = now.AddDays(-5)
+                        }
+                    }
+                };
+
+                var order3 = new Order
+                {
+                    OrderNumber = "HS-202610-1003",
+                    PublicId = $"ord_{Guid.NewGuid():N}"[..20],
+                    UserId = customerUser.Id,
+                    Status = OrderStatus.Processing,
+                    Subtotal = v1.Price + v2.Price,
+                    DiscountTotal = (v1.Price + v2.Price) * 0.10m,
+                    ShippingCost = 0m,
+                    Total = (v1.Price + v2.Price) * 0.90m,
+                    CouponCode = "BIENVENIDA10",
+                    ShippingMethod = "standard",
+                    ShippingAddressSnapshotJson = sampleAddressJson,
+                    CreatedAtUtc = now.AddDays(-1),
+                    PaidAtUtc = now.AddDays(-1),
+                    Items = new List<OrderItem>
+                    {
+                        new()
+                        {
+                            ProductVariantId = v1.Id,
+                            ProductNameSnapshot = v1.Product.Name,
+                            SkuSnapshot = v1.Sku,
+                            UnitPrice = v1.Price,
+                            Quantity = 1,
+                            TotalPrice = v1.Price,
+                            CreatedAtUtc = now.AddDays(-1)
+                        },
+                        new()
+                        {
+                            ProductVariantId = v2.Id,
+                            ProductNameSnapshot = v2.Product.Name,
+                            SkuSnapshot = v2.Sku,
+                            UnitPrice = v2.Price,
+                            Quantity = 1,
+                            TotalPrice = v2.Price,
+                            CreatedAtUtc = now.AddDays(-1)
+                        }
+                    }
+                };
+
+                context.Orders.AddRange(order1, order2, order3);
+                await context.SaveChangesAsync();
+                logger.LogInformation("Seeded 3 sample business orders for analytics and reporting.");
+
+                context.AuditLogs.Add(new AuditLog
+                {
+                    Action = "SYSTEM_INITIALIZED",
+                    EntityName = "System",
+                    EntityId = "Init",
+                    ActorId = adminUser?.Id.ToString(),
+                    ActorEmail = adminUser?.Email,
+                    ActorIpAddress = "127.0.0.1",
+                    CorrelationId = "seed-init",
+                    DetailsJson = "{\"status\":\"Ready\",\"modules\":[\"Catalog\",\"Orders\",\"Scenes\",\"Payments\",\"Analytics\"]}",
+                    CreatedAtUtc = DateTime.UtcNow
+                });
+                await context.SaveChangesAsync();
+            }
+        }
     }
 }

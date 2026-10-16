@@ -37,6 +37,7 @@ public static class DependencyInjection
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IFileStorageService, LocalStorageService>();
         services.AddScoped<IPaymentProvider, MockPaymentProvider>();
+        services.AddScoped<IAuditService, AuditService>();
 
         return services;
     }

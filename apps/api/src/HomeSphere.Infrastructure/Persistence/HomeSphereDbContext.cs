@@ -32,6 +32,7 @@ public class HomeSphereDbContext : DbContext, IApplicationDbContext
     public DbSet<StockReservation> StockReservations => Set<StockReservation>();
     public DbSet<OrderStatusHistory> OrderStatusHistories => Set<OrderStatusHistory>();
     public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     public async Task<IApplicationDbTransaction?> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {

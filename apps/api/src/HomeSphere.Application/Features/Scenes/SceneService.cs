@@ -22,10 +22,12 @@ public interface ISceneService
 public class SceneService : ISceneService
 {
     private readonly IApplicationDbContext _context;
+    private readonly IAuditService? _auditService;
 
-    public SceneService(IApplicationDbContext context)
+    public SceneService(IApplicationDbContext context, IAuditService? auditService = null)
     {
         _context = context;
+        _auditService = auditService;
     }
 
     public async Task<IReadOnlyList<RoomSceneListDto>> GetScenesAsync(bool onlyActive = true, CancellationToken cancellationToken = default)
@@ -164,6 +166,16 @@ public class SceneService : ISceneService
         _context.RoomScenes.Add(scene);
         await _context.SaveChangesAsync(cancellationToken);
 
+        if (_auditService != null)
+        {
+            await _auditService.LogActionAsync(
+                "SCENE_CREATED",
+                "RoomScene",
+                scene.Id.ToString(),
+                new { scene.Title, scene.Slug, scene.RoomType, HotspotCount = scene.Hotspots.Count },
+                cancellationToken: cancellationToken);
+        }
+
         return await GetSceneByIdAsync(scene.Id, cancellationToken);
     }
 
@@ -192,6 +204,16 @@ public class SceneService : ISceneService
 
         await _context.SaveChangesAsync(cancellationToken);
 
+        if (_auditService != null)
+        {
+            await _auditService.LogActionAsync(
+                "SCENE_UPDATED",
+                "RoomScene",
+                scene.Id.ToString(),
+                new { scene.Title, scene.Slug, scene.RoomType, scene.IsActive },
+                cancellationToken: cancellationToken);
+        }
+
         return await GetSceneByIdAsync(id, cancellationToken);
     }
 
@@ -205,6 +227,16 @@ public class SceneService : ISceneService
 
         _context.RoomScenes.Remove(scene);
         await _context.SaveChangesAsync(cancellationToken);
+
+        if (_auditService != null)
+        {
+            await _auditService.LogActionAsync(
+                "SCENE_DELETED",
+                "RoomScene",
+                id.ToString(),
+                new { scene.Title, scene.Slug },
+                cancellationToken: cancellationToken);
+        }
     }
 
     public async Task<SceneHotspotDto> AddHotspotAsync(Guid sceneId, CreateSceneHotspotRequest request, CancellationToken cancellationToken = default)

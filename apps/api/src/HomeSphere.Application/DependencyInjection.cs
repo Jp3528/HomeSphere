@@ -1,4 +1,5 @@
 using HomeSphere.Application.Features.Addresses;
+using HomeSphere.Application.Features.Analytics;
 using HomeSphere.Application.Features.Auth;
 using HomeSphere.Application.Features.Cart;
 using HomeSphere.Application.Features.Catalog;
@@ -24,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<ICartService, CartService>();
         services.AddScoped<ICheckoutService, CheckoutService>();
         services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IAnalyticsService, AnalyticsService>();
         return services;
     }
 }

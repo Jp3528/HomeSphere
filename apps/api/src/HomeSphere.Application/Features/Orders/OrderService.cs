@@ -18,15 +18,18 @@ public class OrderService : IOrderService
     private readonly IApplicationDbContext _context;
     private readonly IPaymentProvider _paymentProvider;
     private readonly ILogger<OrderService> _logger;
+    private readonly IAuditService? _auditService;
 
     public OrderService(
         IApplicationDbContext context,
         IPaymentProvider paymentProvider,
-        ILogger<OrderService> logger)
+        ILogger<OrderService> logger,
+        IAuditService? auditService = null)
     {
         _context = context;
         _paymentProvider = paymentProvider;
         _logger = logger;
+        _auditService = auditService;
     }
 
     public async Task<OrderDto> CreateOrderAsync(
@@ -340,6 +343,17 @@ public class OrderService : IOrderService
                 await tx.CommitAsync(cancellationToken);
             }
 
+            if (_auditService != null)
+            {
+                await _auditService.LogActionAsync(
+                    "ORDER_CREATED",
+                    "Order",
+                    order.Id.ToString(),
+                    new { order.OrderNumber, order.Total, order.Status, ItemsCount = order.Items.Count },
+                    actorId: userId?.ToString(),
+                    cancellationToken: cancellationToken);
+            }
+
             _logger.LogInformation("Order {OrderNumber} ({PublicId}) successfully created with {ItemCount} items. Total: ${Total:F2}",
                 order.OrderNumber, order.PublicId, order.Items.Count, order.Total);
 
@@ -536,6 +550,17 @@ public class OrderService : IOrderService
         _context.OrderStatusHistories.Add(history);
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        if (_auditService != null)
+        {
+            await _auditService.LogActionAsync(
+                "ORDER_STATUS_CHANGED",
+                "Order",
+                order.Id.ToString(),
+                new { order.OrderNumber, OldStatus = oldStatus.ToString(), NewStatus = newStatus.ToString(), Reason = reason },
+                actorEmail: changedBy,
+                cancellationToken: cancellationToken);
+        }
 
         _logger.LogInformation("Order {OrderNumber} status transitioned from {OldStatus} to {NewStatus} by {Actor}. Reason: {Reason}",
             order.OrderNumber, oldStatus, newStatus, changedBy, reason);
