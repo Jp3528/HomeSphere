@@ -2,6 +2,7 @@ using System.Text;
 using HomeSphere.Application;
 using HomeSphere.Infrastructure;
 using HomeSphere.Infrastructure.Persistence;
+using HomeSphere.WebApi.BackgroundServices;
 using HomeSphere.WebApi.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -18,6 +19,9 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 // Application & Infrastructure Layers
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
+
+// Background Workers
+builder.Services.AddHostedService<ExpiredReservationWorker>();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "development_super_secret_jwt_key_at_least_32_chars_long!";

@@ -27,6 +27,35 @@ public class HomeSphereDbContext : DbContext, IApplicationDbContext
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CartItem> CartItems => Set<CartItem>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<StockReservation> StockReservations => Set<StockReservation>();
+    public DbSet<OrderStatusHistory> OrderStatusHistories => Set<OrderStatusHistory>();
+    public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
+
+    public async Task<IApplicationDbTransaction?> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        if (Database.IsRelational())
+        {
+            var tx = await Database.BeginTransactionAsync(cancellationToken);
+            return new ApplicationDbTransaction(tx);
+        }
+        return null;
+    }
+
+    private class ApplicationDbTransaction : IApplicationDbTransaction
+    {
+        private readonly Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction _tx;
+
+        public ApplicationDbTransaction(Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction tx)
+        {
+            _tx = tx;
+        }
+
+        public Task CommitAsync(CancellationToken cancellationToken = default) => _tx.CommitAsync(cancellationToken);
+        public Task RollbackAsync(CancellationToken cancellationToken = default) => _tx.RollbackAsync(cancellationToken);
+        public ValueTask DisposeAsync() => _tx.DisposeAsync();
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

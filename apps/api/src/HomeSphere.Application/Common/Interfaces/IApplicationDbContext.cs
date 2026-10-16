@@ -21,6 +21,18 @@ public interface IApplicationDbContext
     DbSet<Cart> Carts { get; }
     DbSet<CartItem> CartItems { get; }
     DbSet<Coupon> Coupons { get; }
+    DbSet<Order> Orders { get; }
+    DbSet<OrderItem> OrderItems { get; }
+    DbSet<StockReservation> StockReservations { get; }
+    DbSet<OrderStatusHistory> OrderStatusHistories { get; }
+    DbSet<PaymentAttempt> PaymentAttempts { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task<IApplicationDbTransaction?> BeginTransactionAsync(CancellationToken cancellationToken = default);
+}
+
+public interface IApplicationDbTransaction : IAsyncDisposable
+{
+    Task CommitAsync(CancellationToken cancellationToken = default);
+    Task RollbackAsync(CancellationToken cancellationToken = default);
 }
