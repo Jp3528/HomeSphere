@@ -9,7 +9,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v4-06B6D4?logo=tailwindcss&logoColor=white)
 ![WCAG 2.2 AA](https://img.shields.io/badge/Accessibility-WCAG_2.2_AA-green)
-![Tests](https://img.shields.io/badge/Tests-58%2F58_Passing-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-79%2F79_Passing-brightgreen)
 
 ---
 
@@ -219,20 +219,22 @@ homesphere/
 │   │   │   ├── HomeSphere.Infrastructure/ # EF Core 8, PostgreSQL, Seeder, AuditService
 │   │   │   └── HomeSphere.WebApi/      # Controllers, Middlewares, BackgroundWorkers
 │   │   └── tests/
-│   │       └── HomeSphere.UnitTests/   # 58 pruebas unitarias automatizadas
+│   │       ├── HomeSphere.UnitTests/   # 72 pruebas unitarias automatizadas
+│   │       └── HomeSphere.IntegrationTests/ # 7 pruebas de integración (WebApplicationFactory)
 │   └── web/                            # Frontend Next.js 16 (App Router + Turbopack)
 │       ├── Dockerfile                  # Multi-stage standalone build (non-root nextjs)
 │       ├── package.json
 │       ├── next.config.ts              # Standalone output, PPR enabled, Turbo rules
 │       └── src/
-│           ├── app/                    # Rutas públicas, checkout, catálogo y admin
+│           ├── app/                    # Rutas públicas, checkout, catálogo, wishlist y admin
 │           ├── components/             # SceneViewer, HotspotPin, WysiwygEditor, Dashboard
 │           ├── lib/                    # API clients, auth token store, formatters
-│           └── stores/                 # Zustand stores (useCartStore)
+│           └── stores/                 # Zustand stores (useCartStore, useWishlistStore)
 ├── docs/                               # Documentación técnica modular
 │   ├── interactive-scenes.md           # Especificación de escenas y editor WYSIWYG
 │   └── analytics-and-audit.md          # Especificación de KPIs y redactor de auditoría
 ├── docker-compose.yml                  # Orquestación de producción local en 1 comando
+├── CHANGELOG.md                        # Historial de cambios y releases (v1.0.0)
 └── README.md                           # Documento principal
 ```
 
@@ -314,7 +316,7 @@ Estructura diseñada para presentar HomeSphere ante un **Tech Lead**, **Engineer
 ### Minuto 7:00 - 8:00 | Trade-offs, Pruebas y Próximos Pasos
 > *"En cuanto a decisiones de diseño y trade-offs:  
 > Elegí un **Clean Monolith** en lugar de microservicios distribuidos porque para el tamaño y etapa del negocio, la complejidad operacional de orquestar múltiples servicios con transacciones distribuidas (Saga) habría agregado fricción innecesaria. El monolito modular nos da transacciones ACID locales y un despliegue muy simple.  
-> La solución cuenta con **58 pruebas unitarias automatizadas** que cubren la lógica de cálculo de precios, reservas de stock y redacción de secretos, acompañadas de un pipeline de **CI en GitHub Actions** y configuración de **Docker Multi-stage** con imágenes optimizadas y seguras bajo usuarios no root.  
+> La solución cuenta con **79 pruebas automatizadas** (72 pruebas unitarias y 7 pruebas de integración con `WebApplicationFactory`) que cubren la lógica de cálculo de precios, reservas de stock, movimientos de almacén, lista de deseos y redacción de secretos, acompañadas de un pipeline de **CI en GitHub Actions** y configuración de **Docker Multi-stage** con imágenes optimizadas y seguras bajo usuarios no root.  
 > Si tuviéramos que escalar esto a millones de usuarios concurrentes, el siguiente paso evolutivo sería incorporar Redis para las reservas distribuidas de alta frecuencia y OpenTelemetry para trazas distribuidas.  
 > Quedo a su disposición para profundizar en cualquier línea de código o componente arquitectónico."*
 

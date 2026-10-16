@@ -52,9 +52,16 @@ public static class DependencyInjection
 
         try
         {
-            logger.LogInformation("Applying pending PostgreSQL migrations...");
-            await context.Database.MigrateAsync();
-            logger.LogInformation("PostgreSQL migrations applied successfully.");
+            if (context.Database.IsRelational())
+            {
+                logger.LogInformation("Applying pending PostgreSQL migrations...");
+                await context.Database.MigrateAsync();
+                logger.LogInformation("PostgreSQL migrations applied successfully.");
+            }
+            else
+            {
+                await context.Database.EnsureCreatedAsync();
+            }
 
             logger.LogInformation("Executing database seeding...");
             await DatabaseSeeder.SeedAsync(context, passwordHasher, configuration, logger);
