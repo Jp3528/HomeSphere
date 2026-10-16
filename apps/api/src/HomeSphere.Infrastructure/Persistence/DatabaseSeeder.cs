@@ -378,5 +378,78 @@ public static class DatabaseSeeder
                 logger.LogInformation("Seeded 3 interactive room scenes with 10 mapped hotspots.");
             }
         }
+
+        // 6. Seed Promotional Coupons
+        if (!await context.Coupons.AnyAsync())
+        {
+            var now = DateTimeOffset.UtcNow;
+            var coupons = new List<Coupon>
+            {
+                new()
+                {
+                    Code = "BIENVENIDA10",
+                    Description = "10% de descuento de bienvenida en tu primera compra",
+                    DiscountType = DiscountType.Percentage,
+                    DiscountValue = 10m,
+                    MinOrderAmount = null,
+                    MaxDiscountAmount = null,
+                    ValidFromUtc = now.AddDays(-30),
+                    ValidUntilUtc = now.AddYears(2),
+                    UsageLimit = 1000,
+                    TimesUsed = 0,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.UtcNow
+                },
+                new()
+                {
+                    Code = "HOGAR50",
+                    Description = "$50 USD de descuento en compras superiores a $300 USD",
+                    DiscountType = DiscountType.FixedAmount,
+                    DiscountValue = 50m,
+                    MinOrderAmount = 300m,
+                    MaxDiscountAmount = null,
+                    ValidFromUtc = now.AddDays(-30),
+                    ValidUntilUtc = now.AddYears(2),
+                    UsageLimit = 500,
+                    TimesUsed = 0,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.UtcNow
+                },
+                new()
+                {
+                    Code = "VERANO15",
+                    Description = "15% de descuento en pedidos mayores a $500 (tope máximo $150 de descuento)",
+                    DiscountType = DiscountType.Percentage,
+                    DiscountValue = 15m,
+                    MinOrderAmount = 500m,
+                    MaxDiscountAmount = 150m,
+                    ValidFromUtc = now.AddDays(-30),
+                    ValidUntilUtc = now.AddYears(2),
+                    UsageLimit = 200,
+                    TimesUsed = 0,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.UtcNow
+                },
+                new()
+                {
+                    Code = "EXPIRADO20",
+                    Description = "Cupón de prueba vencido",
+                    DiscountType = DiscountType.Percentage,
+                    DiscountValue = 20m,
+                    MinOrderAmount = null,
+                    MaxDiscountAmount = null,
+                    ValidFromUtc = now.AddYears(-2),
+                    ValidUntilUtc = now.AddDays(-10),
+                    UsageLimit = 10,
+                    TimesUsed = 10,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.UtcNow
+                }
+            };
+
+            context.Coupons.AddRange(coupons);
+            await context.SaveChangesAsync();
+            logger.LogInformation("Seeded {CouponCount} initial promotional coupons.", coupons.Count);
+        }
     }
 }
