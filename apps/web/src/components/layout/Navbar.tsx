@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCartStore } from "@/stores/cart-store";
-import { ShoppingBag, Sparkles, Search, Shield, LogIn } from "lucide-react";
+import { useWishlistStore } from "@/stores/wishlist-store";
+import { ShoppingBag, Sparkles, Search, Shield, LogIn, Heart } from "lucide-react";
 
 export function Navbar() {
   const { user, isAuthenticated, hasRole } = useAuthStore();
   const { cart, openDrawer } = useCartStore();
+  const wishlistItems = useWishlistStore((state) => state.items);
+  const wishlistCount = wishlistItems.length;
   const isAdmin = hasRole("ADMIN") || hasRole("Admin") || hasRole("Manager");
   const totalItems = cart?.totalItems ?? 0;
 
@@ -101,6 +104,19 @@ export function Navbar() {
               </Link>
             </div>
           )}
+
+          <Link
+            href="/account/wishlist"
+            className="relative flex h-9 w-9 items-center justify-center rounded-full text-stone-700 hover:bg-stone-100 transition-colors dark:text-stone-300 dark:hover:bg-stone-800"
+            aria-label={`Ver lista de deseos con ${wishlistCount} favoritos`}
+          >
+            <Heart className="h-4.5 w-4.5" />
+            {wishlistCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-2xs">
+                {wishlistCount}
+              </span>
+            )}
+          </Link>
 
           <button
             type="button"

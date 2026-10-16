@@ -17,6 +17,7 @@ import {
   Loader2,
   Home,
   Package,
+  Heart,
 } from "lucide-react";
 
 interface Address {
@@ -243,6 +244,14 @@ export default function AccountPage() {
         >
           <Package className="h-4 w-4" />
           Mis Pedidos
+        </a>
+
+        <a
+          href="/account/wishlist"
+          className="flex items-center gap-2 border-b-2 border-transparent py-3 px-4 text-sm font-semibold text-stone-500 hover:text-stone-700 transition-colors"
+        >
+          <Heart className="h-4 w-4" />
+          Favoritos
         </a>
       </div>
 

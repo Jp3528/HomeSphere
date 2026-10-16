@@ -5,6 +5,7 @@ import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { VariantSelector } from "@/components/catalog/VariantSelector";
 import { ProductDetail } from "@/types/catalog";
 import { ChevronRight, Sparkles } from "lucide-react";
+import { WishlistHeartButton } from "@/components/wishlist/WishlistHeartButton";
 
 interface PageProps {
   params: Promise<{
@@ -175,10 +176,13 @@ async function ProductDetailContent({ params }: PageProps) {
             )}
           </div>
 
-          {/* Title & Short Description */}
-          <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl dark:text-zinc-50">
-            {product.name}
-          </h1>
+          {/* Title & Wishlist Row */}
+          <div className="mt-2 flex items-start justify-between gap-4">
+            <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl dark:text-zinc-50">
+              {product.name}
+            </h1>
+            <WishlistHeartButton productId={product.id} size="md" />
+          </div>
 
           <p className="mt-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
             {product.shortDescription}

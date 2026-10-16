@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<ICheckoutService, CheckoutService>();
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
+        services.AddScoped<Features.Wishlist.IWishlistService, Features.Wishlist.WishlistService>();
         return services;
     }
 }

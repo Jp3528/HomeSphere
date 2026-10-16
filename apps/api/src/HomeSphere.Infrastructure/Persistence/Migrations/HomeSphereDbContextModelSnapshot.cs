@@ -1322,6 +1322,34 @@ namespace HomeSphere.Infrastructure.Persistence.Migrations
                     b.ToTable("user_roles", (string)null);
                 });
 
+            modelBuilder.Entity("HomeSphere.Domain.Entities.WishlistItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId", "ProductId")
+                        .IsUnique();
+
+                    b.ToTable("wishlist_items", (string)null);
+                });
+
             modelBuilder.Entity("HomeSphere.Domain.Entities.Address", b =>
                 {
                     b.HasOne("HomeSphere.Domain.Entities.User", "User")
@@ -1539,6 +1567,25 @@ namespace HomeSphere.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("HomeSphere.Domain.Entities.WishlistItem", b =>
+                {
+                    b.HasOne("HomeSphere.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HomeSphere.Domain.Entities.User", "User")
+                        .WithMany("WishlistItems")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("HomeSphere.Domain.Entities.Brand", b =>
                 {
                     b.Navigation("Products");
@@ -1591,6 +1638,8 @@ namespace HomeSphere.Infrastructure.Persistence.Migrations
                     b.Navigation("RefreshTokens");
 
                     b.Navigation("UserRoles");
+
+                    b.Navigation("WishlistItems");
                 });
 #pragma warning restore 612, 618
         }

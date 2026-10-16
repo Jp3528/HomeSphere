@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ProductListItem } from "@/types/catalog";
 import { Sparkles } from "lucide-react";
+import { WishlistHeartButton } from "@/components/wishlist/WishlistHeartButton";
 
 interface ProductCardProps {
   product: ProductListItem;
@@ -44,6 +45,11 @@ export function ProductCard({ product }: ProductCardProps) {
             Destacado
           </div>
         )}
+
+        {/* Wishlist toggle */}
+        <div className="absolute top-3 right-3 z-20">
+          <WishlistHeartButton productId={product.id} size="sm" />
+        </div>
 
         {/* Category Pill */}
         <div className="absolute bottom-3 left-3 rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-medium text-zinc-800 shadow-xs backdrop-blur-xs dark:bg-zinc-900/90 dark:text-zinc-200">
