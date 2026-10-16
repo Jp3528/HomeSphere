@@ -16,6 +16,7 @@ import {
   Shield,
   Loader2,
   Home,
+  Package,
 } from "lucide-react";
 
 interface Address {
@@ -235,6 +236,14 @@ export default function AccountPage() {
           <MapPin className="h-4 w-4" />
           Mis Direcciones ({addresses.length})
         </button>
+
+        <a
+          href="/account/orders"
+          className="flex items-center gap-2 border-b-2 border-transparent py-3 px-4 text-sm font-semibold text-stone-500 hover:text-stone-700 transition-colors"
+        >
+          <Package className="h-4 w-4" />
+          Mis Pedidos
+        </a>
       </div>
 
       {/* Profile Tab Content */}

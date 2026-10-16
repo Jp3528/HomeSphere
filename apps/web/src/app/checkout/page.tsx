@@ -20,6 +20,8 @@ import {
   Plus
 } from 'lucide-react';
 
+import { ordersApi, CreateOrderRequest } from '@/lib/orders-api';
+
 interface AddressDto {
   id: string;
   label: string;
@@ -124,16 +126,41 @@ export default function CheckoutPage() {
     setCouponCode('');
   };
 
-  const handleConfirmOrder = () => {
-    setOrderProcessing(true);
-    // In Week 5 this triggers POST /api/orders (idempotent creation)
-    setTimeout(() => {
+  const handleConfirmOrder = async () => {
+    try {
+      setOrderProcessing(true);
+      setErrorMsg(null);
+
+      // Generate random unique client Idempotency-Key
+      const idempotencyKey = `idemp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+      const orderReq: CreateOrderRequest = {
+        shippingAddressId: isAuthenticated ? selectedAddressId : null,
+        guestShippingAddress: !isAuthenticated ? {
+          label: 'Entrega Invitado',
+          recipientName: guestAddress.recipientName,
+          phoneNumber: guestAddress.phoneNumber,
+          line1: guestAddress.line1,
+          district: guestAddress.district,
+          city: guestAddress.city,
+          region: guestAddress.region,
+        } : null,
+        shippingMethod,
+        couponCode: appliedCouponCode,
+      };
+
+      const order = await ordersApi.createOrder(orderReq, idempotencyKey);
+
+      // Refresh cart in Zustand store
+      await fetchCart();
+
+      // Redirect directly to the order confirmation page
+      router.push(`/orders/${order.publicId}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error al procesar el pedido';
+      setErrorMsg(msg);
       setOrderProcessing(false);
-      alert(
-        '¡Preview de Checkout validado con éxito al 100% en el servidor!\n\nEn la Semana 5 se integrará la creación transaccional del Pedido con Idempotency-Key y pasarela de pago.'
-      );
-      router.push('/');
-    }, 1200);
+    }
   };
 
   if (!cart || cart.items.length === 0) {
