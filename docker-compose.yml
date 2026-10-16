@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: homesphere-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-homesphere}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-homesphere}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - homesphere-network
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: homesphere-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-homesphere};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};
+      - Cors__AllowedOrigins__0=http://localhost:3000
+      - Cors__AllowedOrigins__1=http://web:3000
+      - Jwt__Secret=${JWT_SECRET:-development_super_secret_jwt_key_at_least_32_chars_long!}
+      - Jwt__Issuer=HomeSphereApi
+      - Jwt__Audience=HomeSphereWeb
+      - Payment__WebhookSecret=${PAYMENT_WEBHOOK_SECRET:-whsec_mock_super_secret_key_for_testing_123456}
+    ports:
+      - "5100:8080"
+    networks:
+      - homesphere-network
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:5100
+    container_name: homesphere-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:5100
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    ports:
+      - "3000:3000"
+    networks:
+      - homesphere-network
+
+volumes:
+  postgres_data:
+    name: homesphere_postgres_data
+
+networks:
+  homesphere-network:
+    name: homesphere-network
+    driver: bridge
