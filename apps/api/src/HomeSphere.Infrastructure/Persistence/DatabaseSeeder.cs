@@ -304,5 +304,79 @@ public static class DatabaseSeeder
 
             logger.LogInformation("Seeded 5 root categories, 12 subcategories, 5 brands, and 8 products with variants and images.");
         }
+
+        // 4. Seed Interactive Room Scenes & Hotspots
+        if (!await context.RoomScenes.AnyAsync())
+        {
+            logger.LogInformation("Seeding interactive room scenes and hotspots...");
+
+            var sofa = await context.Products.FirstOrDefaultAsync(p => p.Slug == "sofa-modular-nordhavn-3-cuerpos");
+            var mesaComedor = await context.Products.FirstOrDefaultAsync(p => p.Slug == "mesa-comedor-stockholm-roble");
+            var sillas = await context.Products.FirstOrDefaultAsync(p => p.Slug == "silla-comedor-kanso-set-x2");
+            var lampara = await context.Products.FirstOrDefaultAsync(p => p.Slug == "lampara-colgante-aurora-laton");
+            var cama = await context.Products.FirstOrDefaultAsync(p => p.Slug == "cama-king-valldal-cabecero");
+            var alfombra = await context.Products.FirstOrDefaultAsync(p => p.Slug == "alfombra-lana-artesanal-atlas");
+            var mesaCentro = await context.Products.FirstOrDefaultAsync(p => p.Slug == "mesa-centro-nube-travertino");
+            var aparador = await context.Products.FirstOrDefaultAsync(p => p.Slug == "aparador-ribbed-roble-metal");
+
+            if (sofa != null && mesaComedor != null && sillas != null && lampara != null && cama != null && alfombra != null && mesaCentro != null && aparador != null)
+            {
+                var scene1 = new RoomScene
+                {
+                    Title = "Salón Nórdico Serena",
+                    Slug = "salon-nordico-serena",
+                    Description = "Espacio de líneas orgánicas, textiles neutros y calidez escandinava donde cada elemento invita a la pausa y el bienestar.",
+                    ImageUrl = "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1920&q=80",
+                    DisplayOrder = 1,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.UtcNow,
+                    Hotspots = new List<SceneHotspot>
+                    {
+                        new() { ProductId = sofa.Id, XCoordinate = 38.00m, YCoordinate = 60.00m, Title = "Sofá Modular Nordhavn", DisplayOrder = 1, IsActive = true, CreatedAtUtc = DateTime.UtcNow },
+                        new() { ProductId = mesaCentro.Id, XCoordinate = 52.00m, YCoordinate = 75.00m, Title = "Mesa de Centro Nube Travertino", DisplayOrder = 2, IsActive = true, CreatedAtUtc = DateTime.UtcNow },
+                        new() { ProductId = alfombra.Id, XCoordinate = 56.00m, YCoordinate = 85.00m, Title = "Alfombra Artesanal Atlas", DisplayOrder = 3, IsActive = true, CreatedAtUtc = DateTime.UtcNow }
+                    }
+                };
+
+                var scene2 = new RoomScene
+                {
+                    Title = "Comedor Vanguardista Stockholm",
+                    Slug = "comedor-vanguardista-stockholm",
+                    Description = "Un comedor contemporáneo con la madera maciza de roble como eje visual, contrastado por la iluminación en latón y sillería bouclé.",
+                    ImageUrl = "https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&w=1920&q=80",
+                    DisplayOrder = 2,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.UtcNow,
+                    Hotspots = new List<SceneHotspot>
+                    {
+                        new() { ProductId = mesaComedor.Id, XCoordinate = 48.00m, YCoordinate = 64.00m, Title = "Mesa de Comedor Stockholm", DisplayOrder = 1, IsActive = true, CreatedAtUtc = DateTime.UtcNow },
+                        new() { ProductId = sillas.Id, XCoordinate = 30.00m, YCoordinate = 68.00m, Title = "Sillas de Comedor Kanso Set x2", DisplayOrder = 2, IsActive = true, CreatedAtUtc = DateTime.UtcNow },
+                        new() { ProductId = lampara.Id, XCoordinate = 50.00m, YCoordinate = 22.00m, Title = "Lámpara Colgante Aurora Latón", DisplayOrder = 3, IsActive = true, CreatedAtUtc = DateTime.UtcNow },
+                        new() { ProductId = aparador.Id, XCoordinate = 84.00m, YCoordinate = 56.00m, Title = "Aparador 4 Puertas Ribbed", DisplayOrder = 4, IsActive = true, CreatedAtUtc = DateTime.UtcNow }
+                    }
+                };
+
+                var scene3 = new RoomScene
+                {
+                    Title = "Dormitorio Minimalista Valldal",
+                    Slug = "dormitorio-minimalista-valldal",
+                    Description = "Refugio sereno y luminoso centrado en texturas naturales, madera clara y una iluminación tenue que favorece el descanso profundo.",
+                    ImageUrl = "https://images.unsplash.com/photo-1540518614846-7ede433c4ef9?auto=format&fit=crop&w=1920&q=80",
+                    DisplayOrder = 3,
+                    IsActive = true,
+                    CreatedAtUtc = DateTime.UtcNow,
+                    Hotspots = new List<SceneHotspot>
+                    {
+                        new() { ProductId = cama.Id, XCoordinate = 50.00m, YCoordinate = 65.00m, Title = "Cama King Size Valldal", DisplayOrder = 1, IsActive = true, CreatedAtUtc = DateTime.UtcNow },
+                        new() { ProductId = lampara.Id, XCoordinate = 78.00m, YCoordinate = 42.00m, Title = "Lámpara Aurora Latón", DisplayOrder = 2, IsActive = true, CreatedAtUtc = DateTime.UtcNow },
+                        new() { ProductId = alfombra.Id, XCoordinate = 48.00m, YCoordinate = 86.00m, Title = "Alfombra Artesanal Atlas", DisplayOrder = 3, IsActive = true, CreatedAtUtc = DateTime.UtcNow }
+                    }
+                };
+
+                context.RoomScenes.AddRange(scene1, scene2, scene3);
+                await context.SaveChangesAsync();
+                logger.LogInformation("Seeded 3 interactive room scenes with 10 mapped hotspots.");
+            }
+        }
     }
 }

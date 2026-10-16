@@ -16,6 +16,8 @@ public interface IApplicationDbContext
     DbSet<Product> Products { get; }
     DbSet<ProductVariant> ProductVariants { get; }
     DbSet<ProductImage> ProductImages { get; }
+    DbSet<RoomScene> RoomScenes { get; }
+    DbSet<SceneHotspot> SceneHotspots { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

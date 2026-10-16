@@ -22,6 +22,8 @@ public class HomeSphereDbContext : DbContext, IApplicationDbContext
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
+    public DbSet<RoomScene> RoomScenes => Set<RoomScene>();
+    public DbSet<SceneHotspot> SceneHotspots => Set<SceneHotspot>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

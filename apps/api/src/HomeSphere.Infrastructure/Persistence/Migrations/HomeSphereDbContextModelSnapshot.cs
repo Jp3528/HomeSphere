@@ -541,6 +541,130 @@ namespace HomeSphere.Infrastructure.Persistence.Migrations
                     b.ToTable("roles", (string)null);
                 });
 
+            modelBuilder.Entity("HomeSphere.Domain.Entities.RoomScene", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("display_order");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)")
+                        .HasColumnName("image_url");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(280)
+                        .HasColumnType("character varying(280)")
+                        .HasColumnName("slug");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("ix_room_scenes_slug");
+
+                    b.ToTable("room_scenes", (string)null);
+                });
+
+            modelBuilder.Entity("HomeSphere.Domain.Entities.SceneHotspot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("display_order");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<Guid?>("ProductVariantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_variant_id");
+
+                    b.Property<Guid>("RoomSceneId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("room_scene_id");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<decimal>("XCoordinate")
+                        .HasColumnType("decimal(5,2)")
+                        .HasColumnName("x_coordinate");
+
+                    b.Property<decimal>("YCoordinate")
+                        .HasColumnType("decimal(5,2)")
+                        .HasColumnName("y_coordinate");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("ix_scene_hotspots_product_id");
+
+                    b.HasIndex("ProductVariantId");
+
+                    b.HasIndex("RoomSceneId")
+                        .HasDatabaseName("ix_scene_hotspots_room_scene_id");
+
+                    b.ToTable("scene_hotspots", (string)null);
+                });
+
             modelBuilder.Entity("HomeSphere.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -690,6 +814,32 @@ namespace HomeSphere.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("HomeSphere.Domain.Entities.SceneHotspot", b =>
+                {
+                    b.HasOne("HomeSphere.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HomeSphere.Domain.Entities.ProductVariant", "ProductVariant")
+                        .WithMany()
+                        .HasForeignKey("ProductVariantId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("HomeSphere.Domain.Entities.RoomScene", "RoomScene")
+                        .WithMany("Hotspots")
+                        .HasForeignKey("RoomSceneId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ProductVariant");
+
+                    b.Navigation("RoomScene");
+                });
+
             modelBuilder.Entity("HomeSphere.Domain.Entities.UserRole", b =>
                 {
                     b.HasOne("HomeSphere.Domain.Entities.Role", "Role")
@@ -731,6 +881,11 @@ namespace HomeSphere.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("HomeSphere.Domain.Entities.Role", b =>
                 {
                     b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("HomeSphere.Domain.Entities.RoomScene", b =>
+                {
+                    b.Navigation("Hotspots");
                 });
 
             modelBuilder.Entity("HomeSphere.Domain.Entities.User", b =>
