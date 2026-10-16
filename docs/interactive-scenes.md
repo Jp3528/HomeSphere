@@ -1,86 +1,86 @@
-# HomeSphere — Interactive Room Scenes & Hotspot Canvas Architecture (Session 3R)
+# HomeSphere — Ambientes Interactivos & Editor Visual (Semana 6)
 
-Este documento detalla la arquitectura técnica, modelo matemático de coordenadas normalizadas, sincronización bidireccional y cumplimiento de accesibilidad (WCAG 2.1 AA) implementados en el módulo de **Ambientes Interactivos** de HomeSphere durante la **Semana 3**.
+## 1. Visión General
+El módulo de **Ambientes Interactivos** es el diferenciador clave de la propuesta de valor de HomeSphere. Transforma fotografías editoriales de alta resolución de salones, comedores, dormitorios y terrazas en catálogos inmersivos interactivos donde los usuarios pueden explorar cada pieza, inspeccionar sus acabados y añadir el ambiente completo a su carrito con un solo clic.
 
 ---
 
-## 1. El Diferencial del Proyecto: Interiorismo Interactivo
+## 2. Arquitectura de Dominio y Datos
 
-El módulo de **Ambientes Interactivos** permite al usuario explorar habitaciones reales de diseño (salones nórdicos, comedores contemporáneos, dormitorios minimalistas) e interactuar con pines posicionales vinculados al catálogo y a variantes específicas.
+### 2.1 Modelo `RoomScene` y `SceneHotspot`
+- **`RoomScene`**:
+  - `Title`, `Slug`, `Description`, `ImageUrl`
+  - `RoomType`: Categoría espacial (`"Living"`, `"Comedor"`, `"Dormitorio"`, `"Terraza"`, `"Estudio"`).
+  - `DisplayOrder`, `IsActive`, `CreatedAtUtc`, `UpdatedAtUtc`
+  - Colección de `SceneHotspot`.
+- **`SceneHotspot`**:
+  - `RoomSceneId`, `ProductId`, `ProductVariantId?`
+  - Coordenadas porcentuales normalizadas: `XCoordinate` (0.00 a 100.00%), `YCoordinate` (0.00 a 100.00%).
+  - `Title`: Sobrescritura de título opcional para la composición (ej. "Sofá Modular en Lino Crudo").
+  - `DisplayOrder`: Orden secuencial del pin (1, 2, 3...) reflejado en la lista lateral.
+  - `IsActive`: Visibilidad independiente del punto.
 
+### 2.2 Degradación Segura y Disponibilidad Dinámica
+Para evitar que un ambiente falle si un producto es archivado o se queda sin stock:
+1. El backend computa `IsAvailable` y `UnavailableReason` en tiempo de consulta sin romper el ambiente.
+2. Si `Product.Status != Active`: `IsAvailable = false`, `UnavailableReason = "Producto no disponible"`.
+3. Si la variante tiene `StockQuantity <= 0`: `IsAvailable = false`, `UnavailableReason = "Agotado"`.
+4. El frontend degrada elegantemente: el pin se colorea en escala de grises atenuada, el botón de compra individual se deshabilita con el motivo, y la acción de "Comprar Ambiente Completo" añade solo las piezas disponibles.
+
+---
+
+## 3. Experiencia de Usuario y Accesibilidad (WCAG 2.2)
+
+- **Objetivos Táctiles (Touch Targets)**:
+  - Pines con área de pulsación de mínimo **44x44 px** (`h-11 w-11`) para cumplimiento AAA en dispositivos móviles.
+- **Navegación por Teclado y Foco**:
+  - `focus-visible:ring-4 focus-visible:ring-amber-500/70` de alto contraste en cada pin y botón de acción.
+  - Tecla `Escape` cierra de inmediato cualquier tooltip interactivo abierto.
+- **Semántica Accessible**:
+  - Botones con `aria-haspopup="dialog"`, `aria-expanded` dinámico y etiquetas descriptivas completas (`aria-label="Ver producto: Sofá Modular Nordhavn"`).
+  - Tooltips marcados con `role="dialog"` y botón de cierre etiquetado.
+
+---
+
+## 4. "Comprar Ambiente Completo"
+- Calcula el subtotal consolidado de todas las piezas con stock disponible en el ambiente.
+- Al hacer clic, itera secuencialmente añadiendo cada variante al carrito (`useCartStore.addItem`), muestra un spinner de progreso, un mensaje de confirmación y abre automáticamente el drawer del carrito.
+
+---
+
+## 5. Editor Visual WYSIWYG en Panel Admin (`/admin/scenes/[id]/editor`)
+
+### 5.1 Captura de Coordenadas al Clic
+```typescript
+const rect = canvasRef.current.getBoundingClientRect();
+const clickX = parseFloat((((e.clientX - rect.left) / rect.width) * 100).toFixed(2));
+const clickY = parseFloat((((e.clientY - rect.top) / rect.height) * 100).toFixed(2));
 ```
-       ┌────────────────────────────────────────────────────────┐
-       │             Lienzo Visual (SceneCanvas)                │
-       │                                                        │
-       │     [1] Pin Sofá (38%, 60%) ───► Popover flotante      │
-       │                                   • Foto               │
-       │                                   • Título & Precio    │
-       │                                   • Link PDP           │
-       │     [2] Pin Mesa (52%, 75%)                            │
-       │     [3] Pin Alfombra (56%, 85%)                        │
-       └───────────────────────────┬────────────────────────────┘
-                                   │ Sincronización
-                                   ▼ Bidireccional
-       ┌────────────────────────────────────────────────────────┐
-       │        Lista Curada Lateral (InteractiveSceneView)     │
-       │  [1] Sofá Modular Nordhavn 3P  ──── $1,450.00  [Ver]   │
-       │  [2] Mesa Centro Travertino    ──── $890.00    [Ver]   │
-       │  [3] Alfombra Atlas Lana       ──── $410.00    [Ver]   │
-       │                                                        │
-       │  Total Estilismo: $2,750.00                            │
-       └────────────────────────────────────────────────────────┘
-```
+Al hacer clic en cualquier lugar de la imagen:
+1. Se calcula la posición relativa exacta en porcentaje (0.00% a 100.00%).
+2. Se muestra un indicador pulsante temporal en verde en la ubicación elegida.
+3. Se despliega el Drawer lateral con las coordenadas pre-cargadas y selector de ajuste fino (+/- 0.1%).
+
+### 5.2 Selector de Producto y Variante
+- Buscador con autocompletado y debounce conectado a `GET /api/products?search=...`.
+- Selección de producto carga automáticamente variantes, precio y stock disponible.
+
+### 5.3 Alternancia "Modo Edición" vs "Vista Previa en Vivo"
+- El administrador puede alternar en un clic entre la interfaz de posicionamiento de pines y la experiencia exacta que tendrá el cliente final, validando la interacción y compra antes de publicar.
 
 ---
 
-## 2. Sistema de Coordenadas Normalizadas (0.00% a 100.00%)
+## 6. Endpoints de la API
 
-### 2.1 Razón de Diseño
-El almacenamiento de píxeles absolutos (`px`) falla en la web moderna donde la pantalla varía desde un smartphone de 375px hasta monitores 4K. Al normalizar las coordenadas como porcentajes decimales:
-$$\text{X}_{\text{norm}} = \frac{x_{\text{pixel}}}{w_{\text{imagen}}} \times 100, \quad \text{Y}_{\text{norm}} = \frac{y_{\text{pixel}}}{h_{\text{imagen}}} \times 100$$
-el pin se renderiza con exactitud matemática sub-pixel en cualquier relación de aspecto:
-```tsx
-style={{
-  left: `${hotspot.xCoordinate}%`,
-  top: `${hotspot.yCoordinate}%`,
-}}
-```
-
-### 2.2 Validación en el Servidor
-En la capa de aplicación y entidad:
-- Validación estricta con anotaciones `[Range(0.0, 100.0)]`.
-- Método de dominio `ValidateCoordinates` que rechaza coordenadas fuera del rango con `BusinessRuleValidationException` (RFC 7807 400 Bad Request).
-- Columna PostgreSQL configurada como `numeric(5,2)` asegurando precisión de centésimas de porcentaje sin redondeos flotantes.
-
----
-
-## 3. Inteligencia de Posicionamiento de Tooltips
-
-Para evitar que los popovers de los pines se recorten en los bordes de la pantalla (overflow boundary clipping):
-- **Eje Y**: Si el pin está en la mitad inferior de la imagen (`yCoordinate > 55%`), el popover se abre hacia arriba (`bottom-full mb-3`). En caso contrario, se abre hacia abajo (`top-full mt-3`).
-- **Eje X**: Si el pin está cerca del borde derecho (`xCoordinate > 65%`), el popover se alinea hacia la izquierda (`right-0`).
-
----
-
-## 4. Accesibilidad y Navegación por Teclado (WCAG 2.1 AA)
-
-| Criterio WCAG | Implementación Técnica |
-| :--- | :--- |
-| **Teclado / Foco** | Todos los pines son elementos `<button>` nativos accesibles mediante `Tab` y accionables con `Enter` o `Espacio`. |
-| **Semántica ARIA** | Atributos `aria-expanded` dinámicos reflejando el estado abierto/cerrado, y `aria-label` descriptivo indicando el producto. |
-| **Escape Key** | Event listener global que escucha `Escape` para cerrar inmediatamente cualquier tooltip abierto y devolver el foco. |
-| **Contraste Visual** | Pines con anillo de contraste blanco/ámbar y números de alto contraste legibles sobre cualquier fotografía de fondo. |
-| **Sincronización Bidireccional** | Al seleccionar un producto en la lista lateral, el pin correspondiente se enfoca y abre automáticamente su popover. |
-
----
-
-## 5. Rendimiento y Streaming
-
-- **Next.js 16 Partial Prerendering (PPR)**: La página `/scenes` y los ambientes individuales `/scenes/[slug]` generan el esqueleto visual en el servidor y transmiten el contenido interactivo mediante `<Suspense>`.
-- **Eager Loading Optimizado en EF Core**:
-  ```csharp
-  Include(s => s.Hotspots)
-      .ThenInclude(h => h.Product)
-          .ThenInclude(p => p.Images)
-  ```
-  Evita problemas N+1 y entrega toda la escena y sus productos en una sola consulta SQL optimizada.
+| Método | Endpoint | Roles | Descripción |
+|---|---|---|---|
+| `GET` | `/api/scenes` | Público | Lista de ambientes activos con conteo de hotspots |
+| `GET` | `/api/scenes/{slug}` | Público | Detalle de ambiente con hotspots y disponibilidad calculada |
+| `GET` | `/api/admin/scenes` | Admin, Manager | Lista de todos los ambientes (activos e inactivos) |
+| `GET` | `/api/admin/scenes/{id}` | Admin, Manager | Detalle completo de ambiente por ID |
+| `POST` | `/api/admin/scenes` | Admin, Manager | Crear nuevo ambiente |
+| `PUT` | `/api/admin/scenes/{id}` | Admin, Manager | Actualizar metadatos de ambiente |
+| `DELETE` | `/api/admin/scenes/{id}` | Admin, Manager | Eliminar ambiente y sus hotspots asociados |
+| `POST` | `/api/admin/scenes/{id}/hotspots` | Admin, Manager | Añadir punto interactivo con validación de coordenadas (0-100%) |
+| `PUT` | `/api/admin/scenes/{id}/hotspots/{hotspotId}` | Admin, Manager | Actualizar coordenadas o producto de un hotspot |
+| `DELETE` | `/api/admin/scenes/{id}/hotspots/{hotspotId}` | Admin, Manager | Eliminar hotspot de un ambiente |
