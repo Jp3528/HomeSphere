@@ -34,6 +34,12 @@ public class RoomSceneConfiguration : IEntityTypeConfiguration<RoomScene>
             .HasMaxLength(1024)
             .IsRequired();
 
+        builder.Property(s => s.RoomType)
+            .HasColumnName("room_type")
+            .HasMaxLength(64)
+            .HasDefaultValue("Living")
+            .IsRequired();
+
         builder.Property(s => s.DisplayOrder)
             .HasColumnName("display_order")
             .HasDefaultValue(0)

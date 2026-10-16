@@ -91,32 +91,35 @@ export function SceneCanvas({
             }}
             className="absolute -translate-x-1/2 -translate-y-1/2 z-20"
           >
-            {/* Pulsing Pin Button */}
+            {/* Pulsing Pin Button (44x44px accessible target) */}
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setActiveHotspot(isSelected ? null : hotspot.id);
               }}
-              aria-label={`Ver producto: ${hotspot.title || hotspot.productName}`}
+              aria-label={`Ver producto: ${hotspot.title || hotspot.productName}${hotspot.isAvailable === false ? ' (No disponible)' : ''}`}
               aria-expanded={isSelected}
-              className={`group relative flex h-9 w-9 items-center justify-center rounded-full transition-transform focus:outline-hidden ${
+              aria-haspopup="dialog"
+              className={`group relative flex h-11 w-11 items-center justify-center rounded-full transition-transform focus-visible:ring-4 focus-visible:ring-amber-500/70 focus-visible:outline-none ${
                 isSelected ? "scale-110" : "hover:scale-110"
               }`}
             >
               {/* Pulse animation ring */}
               <span
-                className={`absolute inline-flex h-full w-full rounded-full bg-white opacity-75 ${
+                className={`absolute inline-flex h-9 w-9 rounded-full bg-white opacity-75 ${
                   isSelected ? "animate-none scale-125" : "animate-ping"
                 }`}
               />
 
               {/* Pin outer circle */}
               <span
-                className={`relative flex h-8 w-8 items-center justify-center rounded-full shadow-lg backdrop-blur-md transition-colors ${
+                className={`relative flex h-9 w-9 items-center justify-center rounded-full shadow-lg backdrop-blur-md transition-colors ${
                   isSelected
-                    ? "bg-amber-600 text-white ring-4 ring-white/50"
-                    : "bg-white/90 text-zinc-900 group-hover:bg-amber-500 group-hover:text-white"
+                    ? "bg-amber-600 text-white ring-4 ring-white/70"
+                    : hotspot.isAvailable === false
+                    ? "bg-zinc-700/90 text-zinc-300 ring-2 ring-zinc-500/50"
+                    : "bg-white/95 text-zinc-900 group-hover:bg-amber-500 group-hover:text-white"
                 }`}
               >
                 <span className="text-xs font-bold">{index + 1}</span>
@@ -138,7 +141,7 @@ export function SceneCanvas({
                 <button
                   type="button"
                   onClick={() => setActiveHotspot(null)}
-                  className="absolute top-2.5 right-2.5 flex h-6 w-6 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                  className="absolute top-2.5 right-2.5 flex h-7 w-7 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
                   aria-label="Cerrar detalle"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -170,6 +173,11 @@ export function SceneCanvas({
                     <span className="mt-0.5 text-sm font-extrabold text-amber-700 dark:text-amber-400">
                       {formattedPrice}
                     </span>
+                    {hotspot.isAvailable === false && (
+                      <span className="mt-0.5 inline-block text-[10px] font-semibold text-rose-600 dark:text-rose-400">
+                        {hotspot.unavailableReason || "Agotado"}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -177,12 +185,16 @@ export function SceneCanvas({
                 <div className="mt-3 flex gap-2">
                   <Link
                     href={`/products/${hotspot.productSlug}`}
-                    className="flex-1 flex items-center justify-center gap-1 rounded-xl border border-zinc-200 py-2 text-[11px] font-semibold text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                    className="flex-1 flex items-center justify-center gap-1 rounded-xl border border-zinc-200 py-2 text-[11px] font-semibold text-zinc-700 transition-colors hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
                   >
                     <span>Detalles</span>
                     <ArrowUpRight className="h-3 w-3" />
                   </Link>
-                  {hotspot.productVariantId && (
+                  {hotspot.isAvailable === false ? (
+                    <div className="flex-1 flex items-center justify-center rounded-xl bg-zinc-100 py-2 text-[11px] font-semibold text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500">
+                      <span>No disponible</span>
+                    </div>
+                  ) : hotspot.productVariantId ? (
                     <button
                       type="button"
                       onClick={async () => {
@@ -192,12 +204,12 @@ export function SceneCanvas({
                           // Handled by store
                         }
                       }}
-                      className="flex-1 flex items-center justify-center gap-1 rounded-xl bg-amber-700 py-2 text-[11px] font-semibold text-white transition-colors hover:bg-amber-600 shadow-sm"
+                      className="flex-1 flex items-center justify-center gap-1 rounded-xl bg-amber-700 py-2 text-[11px] font-semibold text-white transition-colors hover:bg-amber-600 shadow-sm focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
                     >
                       <ShoppingBag className="h-3 w-3" />
                       <span>Comprar</span>
                     </button>
-                  )}
+                  ) : null}
                 </div>
               </div>
             )}

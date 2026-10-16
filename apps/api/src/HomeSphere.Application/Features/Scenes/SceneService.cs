@@ -49,6 +49,7 @@ public class SceneService : ISceneService
                 s.Slug,
                 s.Description,
                 s.ImageUrl,
+                s.RoomType,
                 s.Hotspots.Count(h => !onlyActive || h.IsActive),
                 s.DisplayOrder,
                 s.IsActive,
@@ -119,6 +120,7 @@ public class SceneService : ISceneService
             Slug = normalizedSlug,
             Description = request.Description.Trim(),
             ImageUrl = request.ImageUrl.Trim(),
+            RoomType = string.IsNullOrWhiteSpace(request.RoomType) ? "Living" : request.RoomType.Trim(),
             DisplayOrder = request.DisplayOrder,
             IsActive = request.IsActive,
             CreatedAtUtc = DateTime.UtcNow
@@ -183,6 +185,7 @@ public class SceneService : ISceneService
         scene.Slug = normalizedSlug;
         scene.Description = request.Description.Trim();
         scene.ImageUrl = request.ImageUrl.Trim();
+        scene.RoomType = string.IsNullOrWhiteSpace(request.RoomType) ? scene.RoomType : request.RoomType.Trim();
         scene.DisplayOrder = request.DisplayOrder;
         scene.IsActive = request.IsActive;
         scene.UpdatedAtUtc = DateTime.UtcNow;
@@ -249,6 +252,14 @@ public class SceneService : ISceneService
         _context.SceneHotspots.Add(hotspot);
         await _context.SaveChangesAsync(cancellationToken);
 
+        var isAvailable = product.Status == Domain.Enums.ProductStatus.Active &&
+            (variant == null || (variant.IsActive && variant.StockQuantity > 0));
+        var unavailableReason = !isAvailable
+            ? (product.Status != Domain.Enums.ProductStatus.Active
+                ? "Producto no disponible"
+                : (variant != null && variant.StockQuantity <= 0 ? "Agotado" : "Variante no disponible"))
+            : null;
+
         var primaryImage = product.Images.FirstOrDefault(i => i.IsPrimary)?.Url ?? product.Images.FirstOrDefault()?.Url;
 
         return new SceneHotspotDto(
@@ -266,7 +277,9 @@ public class SceneService : ISceneService
             hotspot.YCoordinate,
             hotspot.Title,
             hotspot.DisplayOrder,
-            hotspot.IsActive
+            hotspot.IsActive,
+            isAvailable,
+            unavailableReason
         );
     }
 
@@ -312,6 +325,14 @@ public class SceneService : ISceneService
 
         await _context.SaveChangesAsync(cancellationToken);
 
+        var isAvailable = product.Status == Domain.Enums.ProductStatus.Active &&
+            (variant == null || (variant.IsActive && variant.StockQuantity > 0));
+        var unavailableReason = !isAvailable
+            ? (product.Status != Domain.Enums.ProductStatus.Active
+                ? "Producto no disponible"
+                : (variant != null && variant.StockQuantity <= 0 ? "Agotado" : "Variante no disponible"))
+            : null;
+
         var primaryImage = product.Images.FirstOrDefault(i => i.IsPrimary)?.Url ?? product.Images.FirstOrDefault()?.Url;
 
         return new SceneHotspotDto(
@@ -329,7 +350,9 @@ public class SceneService : ISceneService
             hotspot.YCoordinate,
             hotspot.Title,
             hotspot.DisplayOrder,
-            hotspot.IsActive
+            hotspot.IsActive,
+            isAvailable,
+            unavailableReason
         );
     }
 
@@ -370,6 +393,14 @@ public class SceneService : ISceneService
                 var primaryImage = h.Product.Images.FirstOrDefault(i => i.IsPrimary)?.Url ??
                                    h.Product.Images.OrderBy(i => i.DisplayOrder).FirstOrDefault()?.Url;
 
+                var isAvailable = h.Product.Status == Domain.Enums.ProductStatus.Active &&
+                    (h.ProductVariant == null || (h.ProductVariant.IsActive && h.ProductVariant.StockQuantity > 0));
+                var unavailableReason = !isAvailable
+                    ? (h.Product.Status != Domain.Enums.ProductStatus.Active
+                        ? "Producto no disponible"
+                        : (h.ProductVariant != null && h.ProductVariant.StockQuantity <= 0 ? "Agotado" : "Variante no disponible"))
+                    : null;
+
                 return new SceneHotspotDto(
                     h.Id,
                     h.RoomSceneId,
@@ -385,7 +416,9 @@ public class SceneService : ISceneService
                     h.YCoordinate,
                     h.Title ?? h.Product.Name,
                     h.DisplayOrder,
-                    h.IsActive
+                    h.IsActive,
+                    isAvailable,
+                    unavailableReason
                 );
             })
             .ToList();
@@ -396,6 +429,7 @@ public class SceneService : ISceneService
             scene.Slug,
             scene.Description,
             scene.ImageUrl,
+            scene.RoomType,
             scene.DisplayOrder,
             scene.IsActive,
             hotspotDtos,
@@ -404,3 +438,4 @@ public class SceneService : ISceneService
         );
     }
 }
+

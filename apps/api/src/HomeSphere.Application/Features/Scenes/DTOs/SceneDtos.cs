@@ -17,7 +17,9 @@ public record SceneHotspotDto(
     decimal YCoordinate,
     string? Title,
     int DisplayOrder,
-    bool IsActive
+    bool IsActive,
+    bool IsAvailable = true,
+    string? UnavailableReason = null
 );
 
 public record RoomSceneListDto(
@@ -26,6 +28,7 @@ public record RoomSceneListDto(
     string Slug,
     string Description,
     string ImageUrl,
+    string RoomType,
     int HotspotCount,
     int DisplayOrder,
     bool IsActive,
@@ -38,6 +41,7 @@ public record RoomSceneDetailDto(
     string Slug,
     string Description,
     string ImageUrl,
+    string RoomType,
     int DisplayOrder,
     bool IsActive,
     IReadOnlyList<SceneHotspotDto> Hotspots,
@@ -51,6 +55,7 @@ public record CreateRoomSceneRequest(
     [Required, StringLength(280)] string Slug,
     [Required] string Description,
     [Required, StringLength(1024)] string ImageUrl,
+    string RoomType = "Living",
     int DisplayOrder = 0,
     bool IsActive = true,
     List<CreateSceneHotspotRequest>? Hotspots = null
@@ -61,6 +66,7 @@ public record UpdateRoomSceneRequest(
     [Required, StringLength(280)] string Slug,
     [Required] string Description,
     [Required, StringLength(1024)] string ImageUrl,
+    string RoomType = "Living",
     int DisplayOrder = 0,
     bool IsActive = true
 );

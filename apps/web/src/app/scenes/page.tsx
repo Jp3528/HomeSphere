@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
-import { SceneCard } from "@/components/scenes/SceneCard";
+import { ScenesExplorer } from "@/components/scenes/ScenesExplorer";
 import { RoomSceneListItem } from "@/types/scenes";
-import { Sparkles, PackageOpen } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Ambientes Interactivos & Estilismo | HomeSphere",
@@ -29,28 +29,7 @@ async function getScenes(): Promise<RoomSceneListItem[]> {
 
 async function ScenesContent() {
   const scenes = await getScenes();
-
-  if (scenes.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-200 bg-white p-12 text-center dark:border-zinc-800 dark:bg-zinc-900">
-        <PackageOpen className="h-12 w-12 text-zinc-400" />
-        <h3 className="mt-4 text-base font-semibold text-zinc-900 dark:text-zinc-100">
-          No hay ambientes publicados
-        </h3>
-        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-          Pronto agregaremos nuevas escenas interactivas para inspirar tus proyectos.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-      {scenes.map((scene) => (
-        <SceneCard key={scene.id} scene={scene} />
-      ))}
-    </div>
-  );
+  return <ScenesExplorer initialScenes={scenes} />;
 }
 
 export default function ScenesPage() {

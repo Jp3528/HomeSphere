@@ -1030,6 +1030,14 @@ namespace HomeSphere.Infrastructure.Persistence.Migrations
                         .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
+                    b.Property<string>("RoomType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasDefaultValue("Living")
+                        .HasColumnName("room_type");
+
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(280)

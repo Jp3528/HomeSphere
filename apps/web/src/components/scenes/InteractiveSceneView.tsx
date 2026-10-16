@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { RoomSceneDetail } from "@/types/scenes";
 import { SceneCanvas } from "./SceneCanvas";
-import { ArrowRight, ShoppingBag } from "lucide-react";
+import { useCartStore } from "@/stores/cart-store";
+import { ArrowRight, ShoppingBag, CheckCircle, Loader2, Sparkles, Tag } from "lucide-react";
 
 interface InteractiveSceneViewProps {
   scene: RoomSceneDetail;
@@ -13,8 +14,15 @@ interface InteractiveSceneViewProps {
 
 export function InteractiveSceneView({ scene }: InteractiveSceneViewProps) {
   const [activeHotspotId, setActiveHotspotId] = useState<string | null>(null);
+  const [isAddingAll, setIsAddingAll] = useState(false);
+  const [addedSuccess, setAddedSuccess] = useState(false);
+  const { addItem, openDrawer } = useCartStore();
 
-  const totalPrice = scene.hotspots.reduce((sum, h) => {
+  const availableHotspots = scene.hotspots.filter(
+    (h) => h.isAvailable !== false && !!h.productVariantId
+  );
+
+  const availableTotalPrice = availableHotspots.reduce((sum, h) => {
     const price = h.productVariantPrice ?? h.productBasePrice;
     return sum + price;
   }, 0);
@@ -22,7 +30,28 @@ export function InteractiveSceneView({ scene }: InteractiveSceneViewProps) {
   const formattedTotalPrice = new Intl.NumberFormat("es-PE", {
     style: "currency",
     currency: "USD",
-  }).format(totalPrice);
+  }).format(availableTotalPrice);
+
+  const handleBuyWholeRoom = async () => {
+    if (availableHotspots.length === 0 || isAddingAll) return;
+
+    setIsAddingAll(true);
+    setAddedSuccess(false);
+
+    try {
+      for (const hotspot of availableHotspots) {
+        if (hotspot.productVariantId) {
+          await addItem(hotspot.productVariantId, 1);
+        }
+      }
+      setAddedSuccess(true);
+      openDrawer();
+    } catch {
+      // Handled in cart store
+    } finally {
+      setIsAddingAll(false);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
@@ -36,9 +65,17 @@ export function InteractiveSceneView({ scene }: InteractiveSceneViewProps) {
           onSelectHotspot={(id) => setActiveHotspotId(id)}
         />
 
-        <p className="text-center text-xs text-zinc-500 dark:text-zinc-400">
-          Haz clic o pulsa en cualquiera de los números sobre la imagen para explorar la pieza y sus acabados.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+          <span>
+            Haz clic o pulsa en cualquiera de los números sobre la imagen para explorar la pieza y sus acabados.
+          </span>
+          {scene.roomType && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-0.5 text-[11px] font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+              <Tag className="h-3 w-3" />
+              {scene.roomType}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Right Column: Curated Products List (4 cols) */}
@@ -50,7 +87,7 @@ export function InteractiveSceneView({ scene }: InteractiveSceneViewProps) {
                 Piezas del Ambiente
               </h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                {scene.hotspots.length} {scene.hotspots.length === 1 ? "pieza seleccionada" : "piezas seleccionadas"}
+                {availableHotspots.length} de {scene.hotspots.length} piezas disponibles
               </p>
             </div>
 
@@ -66,6 +103,7 @@ export function InteractiveSceneView({ scene }: InteractiveSceneViewProps) {
           <div className="mt-4 flex flex-col gap-3">
             {scene.hotspots.map((h, idx) => {
               const isSelected = h.id === activeHotspotId;
+              const isAvailable = h.isAvailable !== false;
               const price = h.productVariantPrice ?? h.productBasePrice;
               const formattedPrice = new Intl.NumberFormat("es-PE", {
                 style: "currency",
@@ -78,7 +116,9 @@ export function InteractiveSceneView({ scene }: InteractiveSceneViewProps) {
                   onClick={() => setActiveHotspotId(isSelected ? null : h.id)}
                   onMouseEnter={() => setActiveHotspotId(h.id)}
                   className={`flex cursor-pointer items-center gap-3.5 rounded-2xl border p-3 transition-all ${
-                    isSelected
+                    !isAvailable
+                      ? "opacity-60 border-zinc-200/60 bg-zinc-50/30 dark:border-zinc-800/60 dark:bg-zinc-900/40"
+                      : isSelected
                       ? "border-amber-600 bg-amber-50/50 shadow-xs ring-2 ring-amber-600/20 dark:border-amber-500 dark:bg-amber-950/20"
                       : "border-zinc-200/80 bg-zinc-50/50 hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-800/40"
                   }`}
@@ -86,7 +126,9 @@ export function InteractiveSceneView({ scene }: InteractiveSceneViewProps) {
                   {/* Pin badge number */}
                   <div
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                      isSelected
+                      !isAvailable
+                        ? "bg-zinc-300 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500"
+                        : isSelected
                         ? "bg-amber-600 text-white"
                         : "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200"
                     }`}
@@ -116,9 +158,16 @@ export function InteractiveSceneView({ scene }: InteractiveSceneViewProps) {
                     <span className="line-clamp-1 text-xs font-semibold text-zinc-900 dark:text-zinc-100">
                       {h.title || h.productName}
                     </span>
-                    <span className="text-xs font-extrabold text-amber-700 dark:text-amber-400">
-                      {formattedPrice}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-extrabold text-amber-700 dark:text-amber-400">
+                        {formattedPrice}
+                      </span>
+                      {!isAvailable && (
+                        <span className="text-[10px] font-medium text-rose-500">
+                          {h.unavailableReason || "Agotado"}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Link Button */}
@@ -135,14 +184,47 @@ export function InteractiveSceneView({ scene }: InteractiveSceneViewProps) {
             })}
           </div>
 
+          {/* Buy Whole Room Action */}
+          <div className="mt-6 border-t border-zinc-100 pt-5 dark:border-zinc-800">
+            <button
+              type="button"
+              disabled={availableHotspots.length === 0 || isAddingAll}
+              onClick={handleBuyWholeRoom}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-zinc-900 px-4 py-3.5 text-xs font-bold text-white shadow-md transition-all hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-amber-600 dark:hover:text-white"
+            >
+              {isAddingAll ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Añadiendo ambiente al carrito...</span>
+                </>
+              ) : addedSuccess ? (
+                <>
+                  <CheckCircle className="h-4 w-4 text-emerald-400" />
+                  <span>¡Ambiente añadido al carrito!</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="h-4 w-4" />
+                  <span>Comprar Ambiente Completo ({formattedTotalPrice})</span>
+                </>
+              )}
+            </button>
+
+            {addedSuccess && (
+              <p className="mt-2 text-center text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                Se han añadido las piezas disponibles al carrito con éxito.
+              </p>
+            )}
+          </div>
+
           {/* Quick Info */}
-          <div className="mt-6 rounded-2xl bg-zinc-50 p-4 text-xs text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-400">
+          <div className="mt-4 rounded-2xl bg-zinc-50 p-4 text-xs text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-400">
             <div className="flex items-center gap-2 font-semibold text-zinc-900 dark:text-zinc-200">
-              <ShoppingBag className="h-4 w-4 text-amber-600" />
-              <span>Compra el Look Completo</span>
+              <Sparkles className="h-4 w-4 text-amber-600" />
+              <span>Garantía de Estilismo HomeSphere</span>
             </div>
             <p className="mt-1 text-[11px] leading-relaxed">
-              Puedes adquirir cada producto por separado o consultar combinaciones personalizadas con nuestros asesores de interiorismo.
+              Comprando el conjunto completo accedes a asesoría de montaje y entrega coordinada en un único despacho preferencial.
             </p>
           </div>
         </div>
@@ -150,3 +232,4 @@ export function InteractiveSceneView({ scene }: InteractiveSceneViewProps) {
     </div>
   );
 }
+

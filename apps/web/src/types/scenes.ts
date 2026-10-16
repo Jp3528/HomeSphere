@@ -14,6 +14,8 @@ export interface SceneHotspot {
   title?: string;
   displayOrder: number;
   isActive: boolean;
+  isAvailable?: boolean;
+  unavailableReason?: string;
 }
 
 export interface RoomSceneListItem {
@@ -22,6 +24,7 @@ export interface RoomSceneListItem {
   slug: string;
   description: string;
   imageUrl: string;
+  roomType: string;
   hotspotCount: number;
   displayOrder: number;
   isActive: boolean;
@@ -34,9 +37,51 @@ export interface RoomSceneDetail {
   slug: string;
   description: string;
   imageUrl: string;
+  roomType: string;
   displayOrder: number;
   isActive: boolean;
   hotspots: SceneHotspot[];
   createdAtUtc: string;
   updatedAtUtc?: string;
 }
+
+export interface CreateRoomScenePayload {
+  title: string;
+  slug: string;
+  description: string;
+  imageUrl: string;
+  roomType?: string;
+  displayOrder?: number;
+  isActive?: boolean;
+}
+
+export interface UpdateRoomScenePayload {
+  title: string;
+  slug: string;
+  description: string;
+  imageUrl: string;
+  roomType?: string;
+  displayOrder?: number;
+  isActive?: boolean;
+}
+
+export interface CreateHotspotPayload {
+  productId: string;
+  productVariantId?: string;
+  xCoordinate: number;
+  yCoordinate: number;
+  title?: string;
+  displayOrder?: number;
+  isActive?: boolean;
+}
+
+export interface UpdateHotspotPayload {
+  productId: string;
+  productVariantId?: string;
+  xCoordinate: number;
+  yCoordinate: number;
+  title?: string;
+  displayOrder?: number;
+  isActive?: boolean;
+}
+

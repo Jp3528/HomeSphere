@@ -26,11 +26,17 @@ export function SceneCard({ scene }: SceneCardProps) {
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
 
-        {/* Hotspot Count Badge */}
+        {/* Hotspot Count & RoomType Badges */}
         <div className="absolute top-4 left-4 flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-zinc-900 shadow-sm backdrop-blur-md dark:bg-zinc-900/90 dark:text-zinc-100">
           <Sparkles className="h-3.5 w-3.5 text-amber-600" />
           <span>{scene.hotspotCount} {scene.hotspotCount === 1 ? "pieza" : "piezas integradas"}</span>
         </div>
+
+        {scene.roomType && (
+          <div className="absolute top-4 right-4 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white shadow-sm backdrop-blur-md">
+            <span>{scene.roomType}</span>
+          </div>
+        )}
       </div>
 
       {/* Content Meta */}
