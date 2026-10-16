@@ -138,4 +138,26 @@ public class CatalogServiceTests
         Assert.Equal(600m, result.Items[1].BasePrice);
         Assert.Equal(1200m, result.Items[2].BasePrice);
     }
+
+    [Fact]
+    public async Task GetCatalogFilters_ShouldCalculateMinMaxPricesAndCounts()
+    {
+        // Arrange
+        var cat = await _categoryService.CreateCategoryAsync(new CreateCategoryRequest("Sala", "sala", null, null, null));
+        var brand = await _brandService.CreateBrandAsync(new CreateBrandRequest("Nordic", "nordic", null, null));
+
+        await _productService.CreateProductAsync(new CreateProductRequest(
+            "P1", "p1", "Desc", "Desc", 100m, ProductStatus.Active, false, cat.Id, brand.Id, null, null));
+        await _productService.CreateProductAsync(new CreateProductRequest(
+            "P2", "p2", "Desc", "Desc", 500m, ProductStatus.Active, false, cat.Id, brand.Id, null, null));
+
+        // Act
+        var filters = await _productService.GetCatalogFiltersAsync();
+
+        // Assert
+        Assert.Equal(100m, filters.MinPrice);
+        Assert.Equal(500m, filters.MaxPrice);
+        Assert.Contains(filters.Categories, c => c.Slug == "sala" && c.Count == 2);
+        Assert.Contains(filters.Brands, b => b.Slug == "nordic" && b.Count == 2);
+    }
 }
