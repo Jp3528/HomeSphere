@@ -30,7 +30,7 @@ export function Navbar() {
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-stone-700">
             <Link
-              href="/catalog"
+              href="/products"
               className="transition-colors hover:text-amber-800"
             >
               Catálogo

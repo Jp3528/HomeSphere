@@ -77,11 +77,29 @@ export default function AccountPage() {
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/login?redirect=/account");
-    } else {
-      fetchProfile();
-      loadAddresses();
+      return;
     }
-  }, [isAuthenticated, router, fetchProfile, loadAddresses]);
+
+    let isMounted = true;
+    fetchProfile();
+    apiClient
+      .get<Address[]>("/api/addresses")
+      .then((data) => {
+        if (isMounted) {
+          setAddresses(data);
+          setIsLoadingAddresses(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setIsLoadingAddresses(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, router, fetchProfile]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
