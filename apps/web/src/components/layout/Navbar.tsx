@@ -8,7 +8,7 @@ import { ShoppingBag, Sparkles, Search, Shield, LogIn } from "lucide-react";
 export function Navbar() {
   const { user, isAuthenticated, hasRole } = useAuthStore();
   const { cart, openDrawer } = useCartStore();
-  const isAdmin = hasRole("ADMIN");
+  const isAdmin = hasRole("ADMIN") || hasRole("Admin") || hasRole("Manager");
   const totalItems = cart?.totalItems ?? 0;
 
   return (
