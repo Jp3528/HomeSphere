@@ -34,6 +34,7 @@ public class HomeSphereDbContext : DbContext, IApplicationDbContext
     public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
+    public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
 
     public async Task<IApplicationDbTransaction?> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {

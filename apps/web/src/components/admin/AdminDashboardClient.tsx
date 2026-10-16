@@ -20,6 +20,7 @@ import {
   ArrowUpRight,
   Sparkles,
   RefreshCw,
+  Package,
 } from "lucide-react";
 
 export function AdminDashboardClient() {
@@ -168,10 +169,19 @@ export function AdminDashboardClient() {
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin text-amber-600" : ""}`} />
             </button>
 
+            {/* Link to Inventory Management */}
+            <Link
+              href="/admin/inventory"
+              className="inline-flex items-center gap-1.5 rounded-2xl bg-zinc-900 px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-zinc-800 transition-colors dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            >
+              <Package className="h-4 w-4 text-amber-500" />
+              <span>Inventario & Almacén</span>
+            </Link>
+
             {/* Link to Scenes Editor */}
             <Link
               href="/admin/scenes"
-              className="inline-flex items-center gap-1.5 rounded-2xl bg-amber-700 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-amber-600 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-2xl bg-amber-700 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-amber-600 transition-colors"
             >
               <Compass className="h-4 w-4" />
               <span>Ambientes Interactivos</span>

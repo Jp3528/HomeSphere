@@ -28,6 +28,7 @@ public interface IApplicationDbContext
     DbSet<PaymentAttempt> PaymentAttempts { get; }
     DbSet<AuditLog> AuditLogs { get; }
     DbSet<WishlistItem> WishlistItems { get; }
+    DbSet<InventoryMovement> InventoryMovements { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task<IApplicationDbTransaction?> BeginTransactionAsync(CancellationToken cancellationToken = default);

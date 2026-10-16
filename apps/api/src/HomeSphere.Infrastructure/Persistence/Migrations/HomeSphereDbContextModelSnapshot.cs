@@ -493,6 +493,59 @@ namespace HomeSphere.Infrastructure.Persistence.Migrations
                     b.ToTable("idempotency_records", (string)null);
                 });
 
+            modelBuilder.Entity("HomeSphere.Domain.Entities.InventoryMovement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Actor")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("NewStock")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PreviousStock")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ProductVariantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("QuantityDelta")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ReferenceId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ReferenceType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("ProductVariantId");
+
+                    b.ToTable("inventory_movements", (string)null);
+                });
+
             modelBuilder.Entity("HomeSphere.Domain.Entities.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1398,6 +1451,17 @@ namespace HomeSphere.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("HomeSphere.Domain.Entities.InventoryMovement", b =>
+                {
+                    b.HasOne("HomeSphere.Domain.Entities.ProductVariant", "ProductVariant")
+                        .WithMany()
+                        .HasForeignKey("ProductVariantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ProductVariant");
                 });
 
             modelBuilder.Entity("HomeSphere.Domain.Entities.Order", b =>
